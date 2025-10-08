@@ -1,30 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Card, CardContent } from './components/ui/card';
-import { Calendar, Users, Package, ChevronRight, Bell } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { Calendar, Users, Package, ChevronRight, Bell, Plus } from 'lucide-react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import * as SQLite from './database/sqlite';
+import { randomUUID } from 'expo-crypto';
+import { useCallback } from 'react';
 
-const Cycles = () => {
+const Cycles = ({ route }: any) => {
   const navigation = useNavigation();
-  const [cycles, setCycles] = useState([
-    {
-      id: '1',
-      name: 'Cycle #2023-001',
-      startDate: '2023-10-01',
-      farmerCount: 12,
-      chickCount: 24000,
-      status: 'Active',
-    },
-    {
-      id: '2',
-      name: 'Cycle #2023-002',
-      startDate: '2023-09-15',
-      farmerCount: 8,
-      chickCount: 16000,
-      status: 'Harvesting',
-    },
-  ]);
-  
+  const [cycles, setCycles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Refresh data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadCycles();
+    }, [])
+  );
+
+  const loadCycles = async () => {
+    try {
+      setLoading(true);
+      const cyclesData: any = await SQLite.getAllCycles();
+      setCycles(cyclesData || []);
+    } catch (error) {
+      console.error('Error loading cycles:', error);
+      setCycles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCyclePress = (cycle) => {
     // @ts-ignore - Navigation typing will be handled by React Navigation
     navigation.navigate('CycleManagement', { cycle });
@@ -33,6 +40,17 @@ const Cycles = () => {
   const handleNotificationPress = () => {
     // @ts-ignore - Navigation typing will be handled by React Navigation
     navigation.navigate('Notifications');
+  };
+
+  const handleAddCycle = () => {
+    // @ts-ignore - Navigation typing will be handled by React Navigation
+    navigation.navigate('StartNewCycle');
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   return (
@@ -60,51 +78,69 @@ const Cycles = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Cycles List Header with Add Button */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Active Cycles</Text>
+          <TouchableOpacity 
+            style={styles.addCycleButton}
+            onPress={handleAddCycle}
+          >
+            <Plus size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+        
         {/* Cycles List */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Active Cycles</Text>
-          
-          {cycles.map((cycle) => (
-            <TouchableOpacity 
-              key={cycle.id}
-              onPress={() => handleCyclePress(cycle)}
-            >
-              <Card style={styles.cycleCard}>
-                <CardContent style={styles.cycleContent}>
-                  <View style={styles.cycleHeader}>
-                    <Text style={styles.cycleName}>{cycle.name}</Text>
-                    <View style={styles.cycleHeaderRight}>
-                      <Text style={[styles.status, 
-                        cycle.status === 'Active' ? styles.activeStatus :
-                        cycle.status === 'Harvesting' ? styles.harvestingStatus :
-                        styles.newStatus
-                      ]}>
-                        {cycle.status}
-                      </Text>
-                      <ChevronRight size={20} color="#94A3B8" />
-                    </View>
-                  </View>
-                  
-                  <View style={styles.cycleDetails}>
-                    <View style={styles.detailItem}>
-                      <Calendar size={16} color="#94A3B8" />
-                      <Text style={styles.detailText}>{cycle.startDate}</Text>
-                    </View>
-                    
-                    <View style={styles.detailItem}>
-                      <Users size={16} color="#94A3B8" />
-                      <Text style={styles.detailText}>{cycle.farmerCount} farmers</Text>
+          {loading ? (
+            <Text>Loading cycles...</Text>
+          ) : cycles.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No cycles found</Text>
+              <Text style={styles.emptyStateSubtext}>Create a new cycle to get started</Text>
+            </View>
+          ) : (
+            cycles.map((cycle) => (
+              <TouchableOpacity 
+                key={cycle.id}
+                onPress={() => handleCyclePress(cycle)}
+              >
+                <Card style={styles.cycleCard}>
+                  <CardContent style={styles.cycleContent}>
+                    <View style={styles.cycleHeader}>
+                      <Text style={styles.cycleName}>{cycle.name}</Text>
+                      <View style={styles.cycleHeaderRight}>
+                        <Text style={[styles.status, 
+                          cycle.status === 'Active' ? styles.activeStatus :
+                          cycle.status === 'Harvesting' ? styles.harvestingStatus :
+                          styles.newStatus
+                        ]}>
+                          {cycle.status}
+                        </Text>
+                        <ChevronRight size={20} color="#94A3B8" />
+                      </View>
                     </View>
                     
-                    <View style={styles.detailItem}>
-                      <Package size={16} color="#94A3B8" />
-                      <Text style={styles.detailText}>{cycle.chickCount.toLocaleString()} chicks</Text>
+                    <View style={styles.cycleDetails}>
+                      <View style={styles.detailItem}>
+                        <Calendar size={16} color="#94A3B8" />
+                        <Text style={styles.detailText}>{formatDate(cycle.start_date)}</Text>
+                      </View>
+                      
+                      <View style={styles.detailItem}>
+                        <Users size={16} color="#94A3B8" />
+                        <Text style={styles.detailText}>{cycle.farmer_count} farmers</Text>
+                      </View>
+                      
+                      <View style={styles.detailItem}>
+                        <Package size={16} color="#94A3B8" />
+                        <Text style={styles.detailText}>{cycle.chick_count?.toLocaleString() || 0} chicks</Text>
+                      </View>
                     </View>
-                  </View>
-                </CardContent>
-              </Card>
-            </TouchableOpacity>
-          ))}
+                  </CardContent>
+                </Card>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
     </View>
@@ -171,14 +207,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  section: {
-    marginBottom: 24,
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#0f172a',
-    marginBottom: 16,
+  },
+  addCycleButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8, // Square with rounded corners
+    backgroundColor: '#059669',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#0f172a',
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 16,
+    color: '#64748b',
   },
   cycleCard: {
     backgroundColor: '#ffffff',

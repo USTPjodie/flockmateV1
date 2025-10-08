@@ -1,32 +1,86 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card, CardContent } from './components/ui/card';
 import { Package, Users, TrendingUp, Bell } from 'lucide-react-native';
 import { Bird } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import * as SQLite from './database/sqlite';
+import { useAuth } from './contexts/AuthContext';
 
 const Home = () => {
   const navigation = useNavigation();
-  
-  // Sample data - in a real app this would come from your Supabase backend
-  const stats = {
-    totalFarmers: 24,
-    activeCycles: 18,
-    totalChicks: 45000,
-    avgPerformance: 92.5,
-  };
+  const { user, role } = useAuth();
+  const [stats, setStats] = useState({
+    totalFarmers: 0,
+    activeCycles: 0,
+    totalChicks: 0,
+    avgPerformance: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentActivity = [
-    { id: 1, farmer: 'John Smith', action: 'Started new cycle', time: '2 hours ago' },
-    { id: 2, farmer: 'Mary Johnson', action: 'Submitted harvest report', time: '5 hours ago' },
-    { id: 3, farmer: 'Robert Davis', action: 'Recorded DOC loading', time: '1 day ago' },
-    { id: 4, farmer: 'Sarah Wilson', action: 'Requested supply delivery', time: '1 day ago' },
-    { id: 5, farmer: 'Michael Brown', action: 'Completed post-harvest checklist', time: '2 days ago' },
-  ];
+  useEffect(() => {
+    loadDashboardData();
+  }, [user, role]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load growers count
+      const growers: any = await SQLite.getAllGrowers();
+      const totalFarmers = growers?.length || 0;
+      
+      // Load cycles count and chick count
+      const cycles: any = await SQLite.getAllCycles();
+      const activeCycles = cycles?.length || 0;
+      const totalChicks = cycles?.reduce((sum: number, cycle: any) => sum + (cycle.chick_count || 0), 0) || 0;
+      
+      // For demo purposes, we'll use a fixed average performance
+      const avgPerformance = 92.5;
+      
+      setStats({
+        totalFarmers,
+        activeCycles,
+        totalChicks,
+        avgPerformance,
+      });
+      
+      // For demo purposes, we'll use fixed recent activity
+      setRecentActivity([
+        { id: 1, farmer: 'John Smith', action: 'Started new cycle', time: '2 hours ago' },
+        { id: 2, farmer: 'Mary Johnson', action: 'Submitted harvest report', time: '5 hours ago' },
+        { id: 3, farmer: 'Robert Davis', action: 'Recorded DOC loading', time: '1 day ago' },
+        { id: 4, farmer: 'Sarah Wilson', action: 'Requested supply delivery', time: '1 day ago' },
+        { id: 5, farmer: 'Michael Brown', action: 'Completed post-harvest checklist', time: '2 days ago' },
+      ]);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      // Fallback to default values
+      setStats({
+        totalFarmers: 0,
+        activeCycles: 0,
+        totalChicks: 0,
+        avgPerformance: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleNotificationPress = () => {
     // @ts-ignore - Navigation typing will be handled by React Navigation
     navigation.navigate('Notifications');
+  };
+
+  // Determine welcome message based on user role
+  const getWelcomeMessage = () => {
+    if (user?.full_name) {
+      return `Welcome back, ${user.full_name}!`;
+    }
+    return role === 'technician' 
+      ? 'Welcome back, Technician!' 
+      : 'Welcome back, Grower!';
   };
 
   return (
@@ -39,7 +93,7 @@ const Home = () => {
         <View style={styles.panelHeader}>
           <View style={styles.headerTextContainer}>
             <Text style={styles.title}>Dashboard</Text>
-            <Text style={styles.subtitle}>Welcome back, Technician!</Text>
+            <Text style={styles.subtitle}>{getWelcomeMessage()}</Text>
           </View>
           <TouchableOpacity 
             style={styles.notificationButton}
@@ -63,7 +117,7 @@ const Home = () => {
                   <Users size={24} color="#059669" />
                   <Text style={styles.cardTitle}>Farmers</Text>
                 </View>
-                <Text style={styles.statValue}>{stats.totalFarmers}</Text>
+                <Text style={styles.statValue}>{loading ? '--' : stats.totalFarmers}</Text>
                 <Text style={styles.cardDescription}>Active growers</Text>
               </CardContent>
             </Card>
@@ -76,7 +130,7 @@ const Home = () => {
                   <Package size={24} color="#059669" />
                   <Text style={styles.cardTitle}>Cycles</Text>
                 </View>
-                <Text style={styles.statValue}>{stats.activeCycles}</Text>
+                <Text style={styles.statValue}>{loading ? '--' : stats.activeCycles}</Text>
                 <Text style={styles.cardDescription}>Ongoing cycles</Text>
               </CardContent>
             </Card>
@@ -89,7 +143,7 @@ const Home = () => {
                   <Bird size={24} color="#059669" />
                   <Text style={styles.cardTitle}>Chicks</Text>
                 </View>
-                <Text style={styles.statValue}>{stats.totalChicks.toLocaleString()}</Text>
+                <Text style={styles.statValue}>{loading ? '--' : stats.totalChicks.toLocaleString()}</Text>
                 <Text style={styles.cardDescription}>Total in cycle</Text>
               </CardContent>
             </Card>
@@ -102,7 +156,7 @@ const Home = () => {
                   <TrendingUp size={24} color="#059669" />
                   <Text style={styles.cardTitle}>Performance</Text>
                 </View>
-                <Text style={styles.statValue}>{stats.avgPerformance}%</Text>
+                <Text style={styles.statValue}>{loading ? '--' : `${stats.avgPerformance}%`}</Text>
                 <Text style={styles.cardDescription}>Avg. success rate</Text>
               </CardContent>
             </Card>

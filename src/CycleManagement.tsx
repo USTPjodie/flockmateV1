@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card, CardContent } from './components/ui/card';
 import { 
@@ -15,19 +15,60 @@ import {
   Leaf
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import * as SQLite from './database/sqlite';
 
-const CycleManagement = ({ route }) => {
+const CycleManagement = ({ route }: any) => {
   const navigation = useNavigation();
-  const { cycle } = route.params || {};
-  
-  // Sample data for demonstration
-  const cycleData = cycle || {
-    id: '1',
-    name: 'Cycle #2023-001',
-    startDate: '2023-10-01',
-    farmerCount: 12,
-    chickCount: 24000,
-    status: 'Active',
+  const { cycle } = route?.params || {};
+  const [cycleData, setCycleData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCycleData();
+  }, []);
+
+  const loadCycleData = async () => {
+    try {
+      setLoading(true);
+      if (cycle?.id) {
+        const data: any = await SQLite.getCycleById(cycle.id);
+        if (data) {
+          setCycleData(data);
+        } else {
+          // Fallback to passed cycle data
+          setCycleData(cycle);
+        }
+      } else {
+        // Default data if no cycle is passed
+        setCycleData({
+          id: '1',
+          name: 'Cycle #2023-001',
+          start_date: '2023-10-01',
+          farmer_count: 12,
+          chick_count: 24000,
+          status: 'Active',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading cycle data:', error);
+      // Fallback to passed cycle data or default
+      setCycleData(cycle || {
+        id: '1',
+        name: 'Cycle #2023-001',
+        start_date: '2023-10-01',
+        farmer_count: 12,
+        chick_count: 24000,
+        status: 'Active',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   const cycleFunctions = [
@@ -89,53 +130,63 @@ const CycleManagement = ({ route }) => {
     },
   ];
 
-  const handleFunctionPress = (functionId) => {
+  const handleFunctionPress = (functionId: string) => {
     // Navigate to specific function screens based on functionId
+    const navigationData = { cycle: cycleData };
+    
     switch (functionId) {
       case 'startNew':
         // Navigate to start new cycle screen
         // @ts-ignore
-        navigation.navigate('StartNewCycle', { cycle: cycleData });
+        navigation.navigate('StartNewCycle', navigationData);
         break;
       case 'docLoading':
         // Navigate to DOC loading screen
         // @ts-ignore
-        navigation.navigate('DocLoading', { cycle: cycleData });
+        navigation.navigate('DocLoading', navigationData);
         break;
       case 'supplyDelivery':
         // Navigate to supply delivery screen
         // @ts-ignore
-        navigation.navigate('SupplyDelivery', { cycle: cycleData });
+        navigation.navigate('SupplyDelivery', navigationData);
         break;
       case 'resubmitSupply':
         // Navigate to resubmit supply screen
         // @ts-ignore
-        navigation.navigate('ResubmitSupply', { cycle: cycleData });
+        navigation.navigate('ResubmitSupply', navigationData);
         break;
       case 'makeHarvest':
         // Navigate to make harvest screen
         // @ts-ignore
-        navigation.navigate('MakeHarvest', { cycle: cycleData });
+        navigation.navigate('MakeHarvest', navigationData);
         break;
       case 'resubmitHarvest':
         // Navigate to resubmit harvest screen
         // @ts-ignore
-        navigation.navigate('ResubmitHarvest', { cycle: cycleData });
+        navigation.navigate('ResubmitHarvest', navigationData);
         break;
       case 'reconciliation':
         // Navigate to reconciliation screen
         // @ts-ignore
-        navigation.navigate('Reconciliation', { cycle: cycleData });
+        navigation.navigate('Reconciliation', navigationData);
         break;
       case 'postHarvest':
         // Navigate to post-harvest screen
         // @ts-ignore
-        navigation.navigate('PostHarvest', { cycle: cycleData });
+        navigation.navigate('PostHarvest', navigationData);
         break;
       default:
         break;
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading cycle data...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -144,7 +195,7 @@ const CycleManagement = ({ route }) => {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{cycleData.name}</Text>
+          <Text style={styles.title}>{cycleData?.name || 'Cycle Management'}</Text>
           <Text style={styles.subtitle}>Cycle Management</Text>
         </View>
 
@@ -154,25 +205,25 @@ const CycleManagement = ({ route }) => {
             <View style={styles.infoRow}>
               <View style={styles.infoItem}>
                 <Calendar size={16} color="#94A3B8" />
-                <Text style={styles.infoText}>{cycleData.startDate}</Text>
+                <Text style={styles.infoText}>{cycleData ? formatDate(cycleData.start_date) : 'N/A'}</Text>
               </View>
               <View style={styles.infoItem}>
                 <Leaf size={16} color="#94A3B8" />
-                <Text style={styles.infoText}>{cycleData.chickCount.toLocaleString()} chicks</Text>
+                <Text style={styles.infoText}>{cycleData?.chick_count?.toLocaleString() || 0} chicks</Text>
               </View>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoItem}>
                 <Leaf size={16} color="#94A3B8" />
-                <Text style={styles.infoText}>{cycleData.farmerCount} farmers</Text>
+                <Text style={styles.infoText}>{cycleData?.farmer_count || 0} farmers</Text>
               </View>
               <View style={styles.statusContainer}>
                 <Text style={[styles.status, 
-                  cycleData.status === 'Active' ? styles.activeStatus :
-                  cycleData.status === 'Harvesting' ? styles.harvestingStatus :
+                  cycleData?.status === 'Active' ? styles.activeStatus :
+                  cycleData?.status === 'Harvesting' ? styles.harvestingStatus :
                   styles.newStatus
                 ]}>
-                  {cycleData.status}
+                  {cycleData?.status || 'Unknown'}
                 </Text>
               </View>
             </View>
@@ -249,24 +300,25 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   infoContent: {
-    padding: 16,
+    padding: 20,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   infoText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#64748b',
-    marginLeft: 4,
+    marginLeft: 8,
   },
   statusContainer: {
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   status: {
     fontSize: 14,
@@ -277,16 +329,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   activeStatus: {
-    backgroundColor: '#dcfce7',
-    color: '#166534',
+    backgroundColor: '#ecfdf5',
+    color: '#059669',
   },
   harvestingStatus: {
-    backgroundColor: '#ffedd5',
-    color: '#9a3412',
+    backgroundColor: '#fff7ed',
+    color: '#f59e0b',
   },
   newStatus: {
-    backgroundColor: '#dbeafe',
-    color: '#1e40af',
+    backgroundColor: '#eff6ff',
+    color: '#3b82f6',
   },
   section: {
     marginBottom: 24,

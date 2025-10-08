@@ -25,6 +25,7 @@ import CustomBottomNav from './src/CustomBottomNav';
 import NotificationsPage from './src/components/NotificationsPage';
 import ChangePassword from './src/components/ChangePassword';
 import SplashScreen from './src/components/SplashScreen';
+import TestGrowers from './src/testGrowers';
 import { Home as HomeIcon, Package, User, Users } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 
@@ -204,6 +205,14 @@ function TechnicianGrowersStack() {
         name="GrowersMain" 
         component={GrowersManagement}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="TestGrowers" 
+        component={TestGrowers}
+        options={{ 
+          headerShown: true,
+          title: 'Test Growers'
+        }}
       />
     </Stack.Navigator>
   );

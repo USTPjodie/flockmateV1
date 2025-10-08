@@ -5,7 +5,13 @@ import { Card, CardContent } from './ui/card';
 import { Loader2, Key } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
-import { supabase } from '../lib/supabase';
+import * as SQLite from '../database/sqlite';
+
+// Simple password hashing function (in production, use a proper library)
+const hashPassword = (password: string): string => {
+  // This is a simple hash for demonstration - use a proper library like bcrypt in production
+  return btoa(password).split('').reverse().join('');
+};
 
 const ChangePassword = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -57,12 +63,14 @@ const ChangePassword = () => {
 
     try {
       // First, re-authenticate the user with their current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user?.email || '',
-        password: currentPassword,
-      });
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
 
-      if (signInError) {
+      const hashedCurrentPassword = hashPassword(currentPassword);
+      
+      // Check if current password is correct
+      if (user.password_hash !== hashedCurrentPassword) {
         Toast.show({
           type: 'error',
           text1: 'Authentication Failed',
@@ -72,13 +80,12 @@ const ChangePassword = () => {
         return;
       }
 
-      // Update the password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (updateError) {
-        throw updateError;
+      // Hash the new password
+      const hashedNewPassword = hashPassword(newPassword);
+      
+      // Update the password in the database
+      if (user.id) {
+        await SQLite.updateUserPassword(user.id, hashedNewPassword);
       }
 
       Toast.show({

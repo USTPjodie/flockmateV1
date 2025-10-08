@@ -66,7 +66,7 @@ const Account = () => {
               <User size={32} color="#059669" />
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{user?.user_metadata?.full_name || 'User'}</Text>
+              <Text style={styles.profileName}>{user?.full_name || 'User'}</Text>
               <View style={styles.emailContainer}>
                 <Mail size={16} color="#94A3B8" />
                 <Text style={styles.profileEmail}>{user?.email || 'user@example.com'}</Text>
