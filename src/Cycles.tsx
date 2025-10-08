@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card, CardContent } from './components/ui/card';
-import { Calendar, Users, Package, ChevronRight } from 'lucide-react-native';
+import { Calendar, Users, Package, ChevronRight, Bell } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const Cycles = () => {
@@ -30,15 +30,34 @@ const Cycles = () => {
     navigation.navigate('CycleManagement', { cycle });
   };
 
+  const handleNotificationPress = () => {
+    // @ts-ignore - Navigation typing will be handled by React Navigation
+    navigation.navigate('Notifications');
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Poultry Cycles</Text>
-          <Text style={styles.subtitle}>Manage production cycles</Text>
+        {/* Panel Header with Notification Bell */}
+        <View style={styles.panelHeader}>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>Poultry Cycles</Text>
+            <Text style={styles.subtitle}>Manage production cycles</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.notificationButton}
+            onPress={handleNotificationPress}
+            activeOpacity={0.7}
+          >
+            <Bell size={24} color="#0f172a" />
+            {/* Notification badge (optional) */}
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>5</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Cycles List */}
@@ -104,8 +123,16 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
-  header: {
+  panelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
+    marginTop: 16, // Add spacing at the top
+    paddingHorizontal: 8, // Add horizontal padding
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   title: {
     fontSize: 28,
@@ -116,6 +143,33 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#64748b',
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   section: {
     marginBottom: 24,

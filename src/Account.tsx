@@ -2,21 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from './contexts/AuthContext';
 import { Card, CardContent } from './components/ui/card';
-import { User, Mail, LogOut, BarChart3, Users } from 'lucide-react-native';
+import { User, Mail, LogOut, Bell, Key } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Cycles: undefined;
-  GrowersManagement: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const Account = () => {
   const { user, signOut } = useAuth();
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation();
 
   const handleSignOut = async () => {
     try {
@@ -34,24 +26,36 @@ const Account = () => {
       });
     }
   };
-  
-  const handleManageCycles = () => {
-    // Navigate to the Cycles tab
+
+  const handleNotificationPress = () => {
     // @ts-ignore - Navigation typing will be handled by React Navigation
-    navigation.navigate('Cycles');
+    navigation.navigate('Notifications');
   };
-  
-  const handleManageGrowers = () => {
-    // Navigate to the Growers Management screen
+
+  const handleChangePasswordPress = () => {
     // @ts-ignore - Navigation typing will be handled by React Navigation
-    navigation.navigate('GrowersManagement');
+    navigation.navigate('ChangePassword');
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Account</Text>
-        <Text style={styles.subtitle}>Manage your profile and settings</Text>
+      {/* Panel Header with Notification Bell */}
+      <View style={styles.panelHeader}>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.title}>Account</Text>
+          <Text style={styles.subtitle}>Manage your profile and settings</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.notificationButton}
+          onPress={handleNotificationPress}
+          activeOpacity={0.7}
+        >
+          <Bell size={24} color="#0f172a" />
+          {/* Notification badge (optional) */}
+          <View style={styles.notificationBadge}>
+            <Text style={styles.notificationBadgeText}>2</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* User Profile Card */}
@@ -76,48 +80,16 @@ const Account = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account Settings</Text>
         
-        <Card style={styles.optionCard}>
-          <CardContent style={styles.optionContent}>
-            <View style={styles.optionHeader}>
-              <View style={styles.optionIcon}>
-                <User size={20} color="#059669" />
-              </View>
-              <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>Change Password</Text>
-                <Text style={styles.optionDescription}>Update your password</Text>
-              </View>
-            </View>
-          </CardContent>
-        </Card>
-        
-        {/* Manage & Monitor Cycle Option */}
-        <TouchableOpacity onPress={handleManageCycles}>
+        <TouchableOpacity onPress={handleChangePasswordPress}>
           <Card style={styles.optionCard}>
             <CardContent style={styles.optionContent}>
               <View style={styles.optionHeader}>
                 <View style={styles.optionIcon}>
-                  <BarChart3 size={20} color="#059669" />
+                  <Key size={20} color="#059669" />
                 </View>
                 <View style={styles.optionText}>
-                  <Text style={styles.optionTitle}>Manage & Monitor Cycles</Text>
-                  <Text style={styles.optionDescription}>View and manage all ongoing cycles</Text>
-                </View>
-              </View>
-            </CardContent>
-          </Card>
-        </TouchableOpacity>
-        
-        {/* Manage & Monitor Grower Option */}
-        <TouchableOpacity onPress={handleManageGrowers}>
-          <Card style={styles.optionCard}>
-            <CardContent style={styles.optionContent}>
-              <View style={styles.optionHeader}>
-                <View style={styles.optionIcon}>
-                  <Users size={20} color="#059669" />
-                </View>
-                <View style={styles.optionText}>
-                  <Text style={styles.optionTitle}>Manage & Monitor Growers</Text>
-                  <Text style={styles.optionDescription}>Manage growers across all cycles</Text>
+                  <Text style={styles.optionTitle}>Change Password</Text>
+                  <Text style={styles.optionDescription}>Update your password</Text>
                 </View>
               </View>
             </CardContent>
@@ -142,8 +114,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     padding: 16,
   },
-  header: {
+  panelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
+    marginTop: 16, // Add spacing at the top
+    paddingHorizontal: 8, // Add horizontal padding
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   title: {
     fontSize: 28,
@@ -154,6 +134,33 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#64748b',
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   profileCard: {
     backgroundColor: '#ffffff',

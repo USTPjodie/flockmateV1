@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card, CardContent } from './components/ui/card';
-import { Package, Users, TrendingUp } from 'lucide-react-native';
-import Entypo from '@expo/vector-icons/Entypo';
+import { Package, Users, TrendingUp, Bell } from 'lucide-react-native';
 import { Bird } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const Home = () => {
+  const navigation = useNavigation();
+  
   // Sample data - in a real app this would come from your Supabase backend
   const stats = {
     totalFarmers: 24,
@@ -22,15 +24,34 @@ const Home = () => {
     { id: 5, farmer: 'Michael Brown', action: 'Completed post-harvest checklist', time: '2 days ago' },
   ];
 
+  const handleNotificationPress = () => {
+    // @ts-ignore - Navigation typing will be handled by React Navigation
+    navigation.navigate('Notifications');
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Dashboard</Text>
-          <Text style={styles.subtitle}>Welcome back, Technician!</Text>
+        {/* Panel Header with Notification Bell */}
+        <View style={styles.panelHeader}>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>Dashboard</Text>
+            <Text style={styles.subtitle}>Welcome back, Technician!</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.notificationButton}
+            onPress={handleNotificationPress}
+            activeOpacity={0.7}
+          >
+            <Bell size={24} color="#0f172a" />
+            {/* Notification badge (optional) */}
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>3</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Stats Cards */}
@@ -118,8 +139,16 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32, // Extra padding at bottom for better scroll experience
   },
-  header: {
+  panelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
+    marginTop: 16, // Add spacing at the top
+    paddingHorizontal: 8, // Add horizontal padding
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   title: {
     fontSize: 28,
@@ -130,6 +159,33 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#64748b',
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   statsContainer: {
     flexDirection: 'row',

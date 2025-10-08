@@ -9,16 +9,18 @@ import {
   Dimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, RotateCw, User } from 'lucide-react-native';
+import { Home, RotateCw, User, Users } from 'lucide-react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 const { width } = Dimensions.get('window');
 
-const CustomBottomNav: React.FC<BottomTabBarProps> = ({ 
+const CustomBottomNav = ({ 
   state, 
   descriptors, 
-  navigation 
-}) => {
+  navigation,
+  ...props
+}: BottomTabBarProps & { userType?: 'grower' | 'technician' }) => {
+  const userType = props.userType || 'grower';
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -39,7 +41,7 @@ const CustomBottomNav: React.FC<BottomTabBarProps> = ({
     }
   };
 
-  // Get icon for each route based on the route name
+  // Get icon for each route based on the route name and user type
   const getIconForRoute = (routeName: string) => {
     switch (routeName) {
       case 'Home':
@@ -48,12 +50,14 @@ const CustomBottomNav: React.FC<BottomTabBarProps> = ({
         return RotateCw;
       case 'Account':
         return User;
+      case 'Growers':
+        return Users;
       default:
         return Home;
     }
   };
 
-  // Get label for each route based on the route name
+  // Get label for each route based on the route name and user type
   const getLabelForRoute = (routeName: string) => {
     switch (routeName) {
       case 'Home':
@@ -62,10 +66,27 @@ const CustomBottomNav: React.FC<BottomTabBarProps> = ({
         return 'Cycles';
       case 'Account':
         return 'Account';
+      case 'Growers':
+        return 'Growers';
       default:
         return routeName;
     }
   };
+
+  // Filter routes based on user type
+  const getFilteredRoutes = () => {
+    if (userType === 'technician') {
+      // Technicians see all routes including Growers
+      return state.routes;
+    } else {
+      // Growers don't see the Growers tab
+      return state.routes.filter(route => route.name !== 'Growers');
+    }
+  };
+
+  const filteredRoutes = getFilteredRoutes();
+  // Calculate tab width based on number of tabs
+  const tabWidth = width / filteredRoutes.length - 20;
 
   return (
     <Animated.View 
@@ -82,15 +103,17 @@ const CustomBottomNav: React.FC<BottomTabBarProps> = ({
       
       {/* Navigation bar */}
       <View style={styles.navBar}>
-        {state.routes.map((route, index) => {
-          const isFocused = state.index === index;
+        {filteredRoutes.map((route, index) => {
+          // Adjust index to match the original state for focused check
+          const originalIndex = state.routes.findIndex(r => r.key === route.key);
+          const isFocused = state.index === originalIndex;
           const IconComponent = getIconForRoute(route.name);
           
           return (
             <TouchableOpacity
               key={route.key}
-              style={styles.tabButton}
-              onPress={() => handleTabPress(index)}
+              style={[styles.tabButton, { minWidth: tabWidth }]}
+              onPress={() => handleTabPress(originalIndex)}
               activeOpacity={0.7}
             >
               <IconComponent 
@@ -151,7 +174,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    minWidth: width / 3 - 20, // 3 tabs: Home, Cycles, Account
+    minWidth: width / 4 - 20, // Default for 4 tabs
   },
   icon: {
     marginBottom: 2,

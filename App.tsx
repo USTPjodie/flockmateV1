@@ -22,12 +22,18 @@ import Reconciliation from './src/Reconciliation';
 import PostHarvest from './src/PostHarvest';
 import GrowersManagement from './src/GrowersManagement';
 import CustomBottomNav from './src/CustomBottomNav';
-import { Home as HomeIcon, Package, User } from 'lucide-react-native';
+import NotificationsPage from './src/components/NotificationsPage';
+import ChangePassword from './src/components/ChangePassword';
+import SplashScreen from './src/components/SplashScreen';
+import { Home as HomeIcon, Package, User, Users } from 'lucide-react-native';
+import { useState, useEffect } from 'react';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+const RootStack = createStackNavigator();
 
-function CyclesStack() {
+// Technician-specific navigation
+function TechnicianCyclesStack() {
   return (
     <Stack.Navigator id={undefined}>
       <Stack.Screen 
@@ -111,7 +117,68 @@ function CyclesStack() {
   );
 }
 
-function AccountStack() {
+// Grower-specific navigation
+function GrowerCyclesStack() {
+  return (
+    <Stack.Navigator id={undefined}>
+      <Stack.Screen 
+        name="CyclesList" 
+        component={Cycles}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="CycleManagement" 
+        component={CycleManagement}
+        options={{ 
+          headerShown: true,
+          title: 'Cycle Management'
+        }}
+      />
+      <Stack.Screen 
+        name="DocLoading" 
+        component={DocLoading}
+        options={{ 
+          headerShown: true,
+          title: 'DOC Loading'
+        }}
+      />
+      <Stack.Screen 
+        name="SupplyDelivery" 
+        component={SupplyDelivery}
+        options={{ 
+          headerShown: true,
+          title: 'Supply Delivery'
+        }}
+      />
+      <Stack.Screen 
+        name="MakeHarvest" 
+        component={MakeHarvest}
+        options={{ 
+          headerShown: true,
+          title: 'Make Harvest'
+        }}
+      />
+      <Stack.Screen 
+        name="Reconciliation" 
+        component={Reconciliation}
+        options={{ 
+          headerShown: true,
+          title: 'Reconciliation of Performance'
+        }}
+      />
+      <Stack.Screen 
+        name="PostHarvest" 
+        component={PostHarvest}
+        options={{ 
+          headerShown: true,
+          title: 'Post-harvest'
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function TechnicianAccountStack() {
   return (
     <Stack.Navigator id={undefined}>
       <Stack.Screen 
@@ -120,22 +187,64 @@ function AccountStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen 
-        name="GrowersManagement" 
-        component={GrowersManagement}
+        name="ChangePassword" 
+        component={ChangePassword}
         options={{ 
-          headerShown: true,
-          title: 'Growers Management'
+          headerShown: false,
         }}
       />
     </Stack.Navigator>
   );
 }
 
-function MainTabs() {
+function TechnicianGrowersStack() {
+  return (
+    <Stack.Navigator id={undefined}>
+      <Stack.Screen 
+        name="GrowersMain" 
+        component={GrowersManagement}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function GrowerAccountStack() {
+  return (
+    <Stack.Navigator id={undefined}>
+      <Stack.Screen 
+        name="AccountMain" 
+        component={Account}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="ChangePassword" 
+        component={ChangePassword}
+        options={{ 
+          headerShown: false,
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function NotificationsStack() {
+  return (
+    <Stack.Navigator id={undefined}>
+      <Stack.Screen 
+        name="NotificationsMain" 
+        component={NotificationsPage}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function TechnicianTabs() {
   return (
     <Tab.Navigator
       id={undefined}
-      tabBar={(props) => <CustomBottomNav {...props} />}
+      tabBar={(props) => <CustomBottomNav {...props} userType="technician" />}
       screenOptions={{
         headerShown: false,
         tabBarStyle: { display: 'none' },
@@ -153,7 +262,7 @@ function MainTabs() {
       />
       <Tab.Screen 
         name="Cycles" 
-        component={CyclesStack}
+        component={TechnicianCyclesStack}
         options={{
           tabBarLabel: 'Cycles',
           tabBarIcon: ({ color, size }) => (
@@ -162,8 +271,18 @@ function MainTabs() {
         }}
       />
       <Tab.Screen 
+        name="Growers" 
+        component={TechnicianGrowersStack}
+        options={{
+          tabBarLabel: 'Growers',
+          tabBarIcon: ({ color, size }) => (
+            <Users color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
         name="Account" 
-        component={AccountStack}
+        component={TechnicianAccountStack}
         options={{
           tabBarLabel: 'Account',
           tabBarIcon: ({ color, size }) => (
@@ -175,8 +294,97 @@ function MainTabs() {
   );
 }
 
+function GrowerTabs() {
+  return (
+    <Tab.Navigator
+      id={undefined}
+      tabBar={(props) => <CustomBottomNav {...props} userType="grower" />}
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { display: 'none' },
+      }}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={Home}
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size }) => (
+            <HomeIcon color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Cycles" 
+        component={GrowerCyclesStack}
+        options={{
+          tabBarLabel: 'Cycles',
+          tabBarIcon: ({ color, size }) => (
+            <Package color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Account" 
+        component={GrowerAccountStack}
+        options={{
+          tabBarLabel: 'Account',
+          tabBarIcon: ({ color, size }) => (
+            <User color={color} size={size} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+function MainAppNavigator() {
+  const { user, role } = useAuth();
+  
+  return (
+    <RootStack.Navigator id={undefined}>
+      {user ? (
+        <>
+          <RootStack.Screen 
+            name="MainTabs" 
+            component={role === 'technician' ? TechnicianTabs : GrowerTabs}
+            options={{ headerShown: false }}
+          />
+          <RootStack.Screen 
+            name="Notifications" 
+            component={NotificationsStack}
+            options={{ headerShown: false }}
+          />
+        </>
+      ) : (
+        <RootStack.Screen 
+          name="Login" 
+          component={Login}
+          options={{ headerShown: false }}
+        />
+      )}
+    </RootStack.Navigator>
+  );
+}
+
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Hide splash screen after app is ready
+  useEffect(() => {
+    if (!showSplash) return;
+    
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [showSplash]);
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   if (loading) {
     return (
@@ -188,7 +396,7 @@ function AppContent() {
 
   return (
     <NavigationContainer>
-      {user ? <MainTabs /> : <Login />}
+      <MainAppNavigator />
       <Toaster />
       <StatusBar style="auto" />
     </NavigationContainer>
