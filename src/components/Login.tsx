@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert 
 import { useAuth } from "../contexts/AuthContext";
 import { Bird, Loader2, User, Wrench, Sprout } from "lucide-react-native";
 import { useToast } from "../hooks/use-toast";
+import { useTheme } from "../contexts/ThemeProvider";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -89,26 +91,31 @@ export default function Login() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
-            <Bird size={32} color="#2d7a4f" />
+          <View style={[styles.iconContainer, { backgroundColor: theme.primary + '20' }]}>
+            <Bird size={32} color={theme.primary} />
           </View>
-          <Text style={styles.title}>Flockmate</Text>
-          <Text style={styles.subtitle}>Poultry Monitoring System</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Flockmate</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Poultry Monitoring System</Text>
         </View>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
           {isSignUp ? (
             <>
-              <Text style={styles.formTitle}>Create Account</Text>
+              <Text style={[styles.formTitle, { color: theme.text }]}>Create Account</Text>
               
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Full Name</Text>
+                <Text style={[styles.label, { color: theme.text }]}>Full Name</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { 
+                    backgroundColor: theme.background,
+                    color: theme.text,
+                    borderColor: theme.textSecondary + '40'
+                  }]}
                   placeholder="Enter your full name"
+                  placeholderTextColor={theme.textSecondary}
                   value={fullName}
                   onChangeText={setFullName}
                   autoCapitalize="words"
@@ -118,10 +125,15 @@ export default function Login() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={[styles.label, { color: theme.text }]}>Email</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { 
+                    backgroundColor: theme.background,
+                    color: theme.text,
+                    borderColor: theme.textSecondary + '40'
+                  }]}
                   placeholder="your.email@example.com"
+                  placeholderTextColor={theme.textSecondary}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -132,10 +144,15 @@ export default function Login() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Password</Text>
+                <Text style={[styles.label, { color: theme.text }]}>Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { 
+                    backgroundColor: theme.background,
+                    color: theme.text,
+                    borderColor: theme.textSecondary + '40'
+                  }]}
                   placeholder="Create a password"
+                  placeholderTextColor={theme.textSecondary}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -146,28 +163,38 @@ export default function Login() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>I am a:</Text>
+                <Text style={[styles.label, { color: theme.text }]}>I am a:</Text>
                 <View style={styles.roleContainer}>
                   <TouchableOpacity
-                    style={[styles.roleButton, role === "grower" && styles.roleButtonSelected]}
+                    style={[styles.roleButton, role === "grower" && styles.roleButtonSelected, { 
+                      backgroundColor: role === "grower" ? theme.primary : theme.background,
+                      borderColor: theme.textSecondary + '40'
+                    }]}
                     onPress={() => setRole("grower")}
                   >
-                    <Sprout size={20} color={role === "grower" ? "#fff" : "#2d7a4f"} />
-                    <Text style={[styles.roleText, role === "grower" && styles.roleTextSelected]}>Grower</Text>
+                    <Sprout size={20} color={role === "grower" ? "#fff" : theme.primary} />
+                    <Text style={[styles.roleText, role === "grower" && styles.roleTextSelected, { 
+                      color: role === "grower" ? "#fff" : theme.text 
+                    }]}>Grower</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
-                    style={[styles.roleButton, role === "technician" && styles.roleButtonSelected]}
+                    style={[styles.roleButton, role === "technician" && styles.roleButtonSelected, { 
+                      backgroundColor: role === "technician" ? theme.primary : theme.background,
+                      borderColor: theme.textSecondary + '40'
+                    }]}
                     onPress={() => setRole("technician")}
                   >
-                    <Wrench size={20} color={role === "technician" ? "#fff" : "#2d7a4f"} />
-                    <Text style={[styles.roleText, role === "technician" && styles.roleTextSelected]}>Technician</Text>
+                    <Wrench size={20} color={role === "technician" ? "#fff" : theme.primary} />
+                    <Text style={[styles.roleText, role === "technician" && styles.roleTextSelected, { 
+                      color: role === "technician" ? "#fff" : theme.text 
+                    }]}>Technician</Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
               <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
+                style={[styles.button, loading && styles.buttonDisabled, { backgroundColor: theme.primary }]}
                 onPress={handleSignUp}
                 disabled={loading}
               >
@@ -183,13 +210,18 @@ export default function Login() {
             </>
           ) : (
             <>
-              <Text style={styles.formTitle}>Sign In</Text>
+              <Text style={[styles.formTitle, { color: theme.text }]}>Sign In</Text>
               
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={[styles.label, { color: theme.text }]}>Email</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { 
+                    backgroundColor: theme.background,
+                    color: theme.text,
+                    borderColor: theme.textSecondary + '40'
+                  }]}
                   placeholder="your.email@example.com"
+                  placeholderTextColor={theme.textSecondary}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -200,10 +232,15 @@ export default function Login() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Password</Text>
+                <Text style={[styles.label, { color: theme.text }]}>Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { 
+                    backgroundColor: theme.background,
+                    color: theme.text,
+                    borderColor: theme.textSecondary + '40'
+                  }]}
                   placeholder="Enter your password"
+                  placeholderTextColor={theme.textSecondary}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -214,7 +251,7 @@ export default function Login() {
               </View>
 
               <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
+                style={[styles.button, loading && styles.buttonDisabled, { backgroundColor: theme.primary }]}
                 onPress={handleSignIn}
                 disabled={loading}
               >
@@ -231,159 +268,133 @@ export default function Login() {
           )}
 
           <TouchableOpacity
-            style={styles.switchModeButton}
+            style={styles.toggleButton}
             onPress={toggleMode}
           >
-            <Text style={styles.switchModeText}>
-              {isSignUp 
-                ? "Already have an account? Sign In" 
-                : "Don't have an account? Create One"}
+            <Text style={[styles.toggleText, { color: theme.primary }]}>
+              {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
             </Text>
           </TouchableOpacity>
         </View>
-
-        <Text style={styles.footerText}>
-          Secure access for poultry technicians and farmers
-        </Text>
       </View>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#f0f9f4",
+    justifyContent: 'center',
     padding: 16,
   },
   content: {
-    flex: 1,
-    justifyContent: "center",
     maxWidth: 400,
-    width: "100%",
-    alignSelf: "center",
+    width: '100%',
+    alignSelf: 'center',
   },
   header: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 32,
   },
   iconContainer: {
     width: 64,
     height: 64,
-    borderRadius: 12,
-    backgroundColor: "rgba(45, 122, 79, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 32,
+    fontWeight: 'bold',
     marginBottom: 8,
-    color: "#000",
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
-    textAlign: "center",
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   formTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#000",
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    textAlign: 'center',
   },
   formGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '600',
     marginBottom: 8,
-    color: "#333",
   },
   input: {
-    height: 56,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 16,
+    borderRadius: 12,
+    padding: 12,
     fontSize: 16,
-    backgroundColor: "#fff",
   },
   roleContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   roleButton: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: "#2d7a4f",
-    borderRadius: 8,
-    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: 8,
   },
   roleButtonSelected: {
-    backgroundColor: "#2d7a4f",
+    borderWidth: 0,
   },
   roleText: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#2d7a4f",
-    marginLeft: 8,
+    fontWeight: '600',
   },
   roleTextSelected: {
-    color: "#fff",
+    color: '#fff',
   },
   button: {
-    backgroundColor: "#2d7a4f",
-    height: 56,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
     marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   buttonContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   buttonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
+    fontWeight: '600',
   },
-  switchModeButton: {
-    marginTop: 16,
-    padding: 12,
-    alignItems: "center",
-  },
-  switchModeText: {
-    color: "#2d7a4f",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  footerText: {
-    textAlign: "center",
-    fontSize: 14,
-    color: "#666",
+  toggleButton: {
     marginTop: 24,
+    alignItems: 'center',
+  },
+  toggleText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

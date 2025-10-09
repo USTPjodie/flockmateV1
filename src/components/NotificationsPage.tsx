@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card, CardContent } from './ui/card';
 import { Bell, X, CheckCircle, AlertTriangle, Info } from 'lucide-react-native';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useTheme } from '../contexts/ThemeProvider';
 
 const NotificationsPage = ({ navigation }) => {
+  const { notificationCount, resetNotifications } = useNotifications();
+  const { theme } = useTheme();
+  
   // Sample notifications data
   const notifications = [
     {
@@ -86,6 +91,7 @@ const NotificationsPage = ({ navigation }) => {
   const markAllAsRead = () => {
     // In a real app, this would update all notifications status in the database
     console.log('Marking all notifications as read');
+    resetNotifications();
   };
 
   const deleteNotification = (id: string) => {
@@ -95,13 +101,13 @@ const NotificationsPage = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.primary }]}>
         <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-          <X size={24} color="#0f172a" />
+          <X size={24} color={theme.white} />
         </TouchableOpacity>
-        <Text style={styles.title}>Notifications</Text>
+        <Text style={[styles.title, { color: theme.white }]}>Notifications</Text>
         <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-          <Text style={styles.markAllText}>Mark All Read</Text>
+          <Text style={[styles.markAllText, { color: theme.white + 'CC' }]}>Mark All Read</Text>
         </TouchableOpacity>
       </View>
 
@@ -173,7 +179,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#6D9773',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
@@ -183,14 +189,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   markAllButton: {
     padding: 8,
   },
   markAllText: {
     fontSize: 16,
-    color: '#059669',
+    color: '#ffffff',
     fontWeight: '500',
   },
   scrollView: {

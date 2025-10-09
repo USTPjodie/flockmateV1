@@ -1,6 +1,6 @@
-# EnviroTrack Mobile App
+# Flockmate Mobile App
 
-A mobile version of the EnviroTrack poultry monitoring system built with Expo.
+A mobile version of the Flockmate poultry monitoring system built with Expo.
 
 ## Getting Started
 

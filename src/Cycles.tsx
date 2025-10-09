@@ -1,28 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Card, CardContent } from './components/ui/card';
-import { Calendar, Users, Package, ChevronRight, Bell, Plus } from 'lucide-react-native';
+import { Calendar, Users, Package, ChevronRight, Plus } from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as SQLite from './database/sqlite';
 import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
+import { useAuth } from './contexts/AuthContext';
+import { useTheme } from './contexts/ThemeProvider';
 
 const Cycles = ({ route }: any) => {
   const navigation = useNavigation();
   const [cycles, setCycles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, role } = useAuth();
+  const { theme } = useTheme();
 
   // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadCycles();
-    }, [])
+    }, [user, role])
   );
 
   const loadCycles = async () => {
     try {
       setLoading(true);
-      const cyclesData: any = await SQLite.getAllCycles();
+      let cyclesData: any = [];
+      
+      if (role === 'grower' && user?.id) {
+        // For growers, only show cycles linked to them
+        // We need to find the grower record associated with this user
+        const growerData: any = await SQLite.getGrowerByEmail(user.email);
+        if (growerData) {
+          cyclesData = await SQLite.getCyclesByGrowerId(growerData.id);
+        }
+      } else {
+        // For technicians and other roles, show all cycles
+        cyclesData = await SQLite.getAllCycles();
+      }
+      
       setCycles(cyclesData || []);
     } catch (error) {
       console.error('Error loading cycles:', error);
@@ -43,8 +60,13 @@ const Cycles = ({ route }: any) => {
   };
 
   const handleAddCycle = () => {
-    // @ts-ignore - Navigation typing will be handled by React Navigation
-    navigation.navigate('StartNewCycle');
+    // Only technicians should be able to add cycles
+    if (role === 'technician') {
+      // @ts-ignore - Navigation typing will be handled by React Navigation
+      navigation.navigate('StartNewCycle');
+    } else {
+      Alert.alert('Permission Denied', 'Only technicians can create new cycles.');
+    }
   };
 
   // Format date for display
@@ -54,49 +76,46 @@ const Cycles = ({ route }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Panel Header with Notification Bell */}
-        <View style={styles.panelHeader}>
+        {/* Panel Header */}
+        <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 12, padding: 16 }]}>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>Poultry Cycles</Text>
-            <Text style={styles.subtitle}>Manage production cycles</Text>
+            <Text style={[styles.title, { color: theme.white }]}>Poultry Cycles</Text>
+            <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage production cycles</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.notificationButton}
-            onPress={handleNotificationPress}
-            activeOpacity={0.7}
-          >
-            <Bell size={24} color="#0f172a" />
-            {/* Notification badge (optional) */}
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>5</Text>
-            </View>
-          </TouchableOpacity>
         </View>
 
         {/* Cycles List Header with Add Button */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Active Cycles</Text>
-          <TouchableOpacity 
-            style={styles.addCycleButton}
-            onPress={handleAddCycle}
-          >
-            <Plus size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Active Cycles</Text>
+          {role === 'technician' && (
+            <TouchableOpacity 
+              style={[styles.addCycleButton, { backgroundColor: theme.primary }]}
+              onPress={handleAddCycle}
+            >
+              <Plus size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
         </View>
-        
+
         {/* Cycles List */}
         <View style={styles.section}>
           {loading ? (
-            <Text>Loading cycles...</Text>
+            <Text style={{ color: theme.textSecondary }}>Loading cycles...</Text>
           ) : cycles.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No cycles found</Text>
-              <Text style={styles.emptyStateSubtext}>Create a new cycle to get started</Text>
+              <Text style={[styles.emptyStateText, { color: theme.text }]}>
+                No cycles found
+              </Text>
+              <Text style={[styles.emptyStateSubtext, { color: theme.textSecondary }]}>
+                {role === 'grower' 
+                  ? 'You have not been assigned to any cycles yet.' 
+                  : 'Create a new cycle to get started'}
+              </Text>
             </View>
           ) : (
             cycles.map((cycle) => (
@@ -104,36 +123,37 @@ const Cycles = ({ route }: any) => {
                 key={cycle.id}
                 onPress={() => handleCyclePress(cycle)}
               >
-                <Card style={styles.cycleCard}>
+                <Card style={[styles.cycleCard, { backgroundColor: theme.cardBackground }]}>
                   <CardContent style={styles.cycleContent}>
                     <View style={styles.cycleHeader}>
-                      <Text style={styles.cycleName}>{cycle.name}</Text>
+                      <Text style={[styles.cycleName, { color: theme.text }]}>{cycle.name}</Text>
                       <View style={styles.cycleHeaderRight}>
                         <Text style={[styles.status, 
                           cycle.status === 'Active' ? styles.activeStatus :
                           cycle.status === 'Harvesting' ? styles.harvestingStatus :
-                          styles.newStatus
+                          styles.newStatus,
+                          { color: cycle.status === 'Active' ? theme.success : cycle.status === 'Harvesting' ? theme.warning : theme.info }
                         ]}>
                           {cycle.status}
                         </Text>
-                        <ChevronRight size={20} color="#94A3B8" />
+                        <ChevronRight size={20} color={theme.textSecondary} />
                       </View>
                     </View>
                     
                     <View style={styles.cycleDetails}>
                       <View style={styles.detailItem}>
-                        <Calendar size={16} color="#94A3B8" />
-                        <Text style={styles.detailText}>{formatDate(cycle.start_date)}</Text>
+                        <Calendar size={16} color={theme.textSecondary} />
+                        <Text style={[styles.detailText, { color: theme.textSecondary }]}>{formatDate(cycle.start_date)}</Text>
                       </View>
                       
                       <View style={styles.detailItem}>
-                        <Users size={16} color="#94A3B8" />
-                        <Text style={styles.detailText}>{cycle.farmer_count} farmers</Text>
+                        <Users size={16} color={theme.textSecondary} />
+                        <Text style={[styles.detailText, { color: theme.textSecondary }]}>{cycle.farmer_count} farmers</Text>
                       </View>
                       
                       <View style={styles.detailItem}>
-                        <Package size={16} color="#94A3B8" />
-                        <Text style={styles.detailText}>{cycle.chick_count?.toLocaleString() || 0} chicks</Text>
+                        <Package size={16} color={theme.textSecondary} />
+                        <Text style={[styles.detailText, { color: theme.textSecondary }]}>{cycle.chick_count?.toLocaleString() || 0} chicks</Text>
                       </View>
                     </View>
                   </CardContent>
@@ -150,7 +170,6 @@ const Cycles = ({ route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   scrollView: {
     flex: 1,
@@ -164,8 +183,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
-    marginTop: 16, // Add spacing at the top
-    paddingHorizontal: 8, // Add horizontal padding
+    marginTop: 16,
+    paddingHorizontal: 8,
   },
   headerTextContainer: {
     flex: 1,
@@ -173,39 +192,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#0f172a',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#64748b',
-  },
-  notificationButton: {
-    position: 'relative',
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notificationBadgeText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -216,13 +206,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#0f172a',
   },
   addCycleButton: {
     width: 36,
     height: 36,
-    borderRadius: 8, // Square with rounded corners
-    backgroundColor: '#059669',
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -241,15 +229,12 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#0f172a',
     marginBottom: 8,
   },
   emptyStateSubtext: {
     fontSize: 16,
-    color: '#64748b',
   },
   cycleCard: {
-    backgroundColor: '#ffffff',
     borderRadius: 12,
     marginBottom: 16,
     shadowColor: '#000',
@@ -270,7 +255,6 @@ const styles = StyleSheet.create({
   cycleName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0f172a',
   },
   cycleHeaderRight: {
     flexDirection: 'row',
@@ -286,16 +270,13 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   activeStatus: {
-    backgroundColor: '#dcfce7',
-    color: '#166534',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
   },
   harvestingStatus: {
-    backgroundColor: '#ffedd5',
-    color: '#9a3412',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
   },
   newStatus: {
-    backgroundColor: '#dbeafe',
-    color: '#1e40af',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
   cycleDetails: {
     flexDirection: 'row',
@@ -307,7 +288,6 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: '#64748b',
     marginLeft: 4,
   },
 });

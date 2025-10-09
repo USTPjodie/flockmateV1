@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { Card, CardContent } from './components/ui/card';
-import { Users, TrendingUp, BarChart3, Bell, Plus } from 'lucide-react-native';
+import { Users, TrendingUp, BarChart3, Plus } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as SQLite from './database/sqlite';
 import { randomUUID } from 'expo-crypto';
+import { useTheme } from './contexts/ThemeProvider';
 
 type RootStackParamList = {
   Cycles: undefined;
@@ -25,6 +26,7 @@ const GrowersManagement = () => {
     email: '',
     address: ''
   });
+  const { theme } = useTheme();
 
   useEffect(() => {
     loadGrowers();
@@ -47,11 +49,6 @@ const GrowersManagement = () => {
     // Navigate to the Cycles tab
     // @ts-ignore - Navigation typing will be handled by React Navigation
     navigation.navigate('Cycles');
-  };
-
-  const handleNotificationPress = () => {
-    // @ts-ignore - Navigation typing will be handled by React Navigation
-    navigation.navigate('Notifications');
   };
 
   const handleAddGrower = async () => {
@@ -94,44 +91,33 @@ const GrowersManagement = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Panel Header with Notification Bell */}
-        <View style={styles.panelHeader}>
+        {/* Panel Header */}
+        <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 12, padding: 16 }]}>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>Growers Management</Text>
-            <Text style={styles.subtitle}>Manage all growers across cycles</Text>
+            <Text style={[styles.title, { color: theme.white }]}>Growers Management</Text>
+            <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage all growers across cycles</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.notificationButton}
-            onPress={handleNotificationPress}
-            activeOpacity={0.7}
-          >
-            <Bell size={24} color="#0f172a" />
-            {/* Notification badge (optional) */}
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>4</Text>
-            </View>
-          </TouchableOpacity>
         </View>
 
         {/* Management Options */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Management Options</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Management Options</Text>
           
           <TouchableOpacity onPress={handleManageCycles}>
-            <Card style={styles.optionCard}>
+            <Card style={[styles.optionCard, { backgroundColor: theme.cardBackground }]}>
               <CardContent style={styles.optionContent}>
                 <View style={styles.optionHeader}>
-                  <View style={styles.optionIcon}>
-                    <BarChart3 size={20} color="#059669" />
+                  <View style={[styles.optionIcon, { backgroundColor: theme.primary + '20' }]}>
+                    <BarChart3 size={20} color={theme.primary} />
                   </View>
                   <View style={styles.optionText}>
-                    <Text style={styles.optionTitle}>Manage & Monitor Cycles</Text>
-                    <Text style={styles.optionDescription}>View and manage all ongoing cycles</Text>
+                    <Text style={[styles.optionTitle, { color: theme.text }]}>Manage & Monitor Cycles</Text>
+                    <Text style={[styles.optionDescription, { color: theme.textSecondary }]}>View and manage all ongoing cycles</Text>
                   </View>
                 </View>
               </CardContent>
@@ -142,9 +128,9 @@ const GrowersManagement = () => {
         {/* Add Grower Button */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>All Growers</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>All Growers</Text>
             <TouchableOpacity 
-              style={styles.addButton}
+              style={[styles.addButton, { backgroundColor: theme.primary }]}
               onPress={() => setModalVisible(true)}
             >
               <Plus size={20} color="#FFFFFF" />
@@ -152,24 +138,24 @@ const GrowersManagement = () => {
           </View>
           
           {loading ? (
-            <Text>Loading growers...</Text>
+            <Text style={{ color: theme.textSecondary }}>Loading growers...</Text>
           ) : growers.length === 0 ? (
-            <Text>No growers found. Add a new grower to get started.</Text>
+            <Text style={{ color: theme.textSecondary }}>No growers found. Add a new grower to get started.</Text>
           ) : (
             growers.map((grower) => (
-              <Card key={grower.id} style={styles.growerCard}>
+              <Card key={grower.id} style={[styles.growerCard, { backgroundColor: theme.cardBackground }]}>
                 <CardContent style={styles.growerContent}>
                   <View style={styles.growerHeader}>
-                    <View style={styles.growerIcon}>
-                      <Users size={24} color="#059669" />
+                    <View style={[styles.growerIcon, { backgroundColor: theme.primary + '20' }]}>
+                      <Users size={24} color={theme.primary} />
                     </View>
                     <View style={styles.growerInfo}>
-                      <Text style={styles.growerName}>{grower.name}</Text>
-                      <Text style={styles.growerCycles}>Contact: {grower.contact_person || 'N/A'}</Text>
+                      <Text style={[styles.growerName, { color: theme.text }]}>{grower.name}</Text>
+                      <Text style={[styles.growerCycles, { color: theme.textSecondary }]}>Contact: {grower.contact_person || 'N/A'}</Text>
                     </View>
                     <View style={styles.performanceContainer}>
-                      <TrendingUp size={16} color="#059669" />
-                      <Text style={styles.performanceValue}>Active</Text>
+                      <TrendingUp size={16} color={theme.success} />
+                      <Text style={[styles.performanceValue, { color: theme.success }]}>Active</Text>
                     </View>
                   </View>
                 </CardContent>
@@ -186,59 +172,84 @@ const GrowersManagement = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Grower</Text>
+        <View style={[styles.modalContainer, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Add New Grower</Text>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Grower Name *</Text>
+              <Text style={[styles.label, { color: theme.text }]}>Grower Name *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { 
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  borderColor: theme.textSecondary + '40'
+                }]}
                 value={newGrower.name}
                 onChangeText={(text) => setNewGrower({...newGrower, name: text})}
                 placeholder="Enter grower name"
+                placeholderTextColor={theme.textSecondary}
               />
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Contact Person</Text>
+              <Text style={[styles.label, { color: theme.text }]}>Contact Person</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { 
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  borderColor: theme.textSecondary + '40'
+                }]}
                 value={newGrower.contactPerson}
                 onChangeText={(text) => setNewGrower({...newGrower, contactPerson: text})}
-                placeholder="Enter contact person name"
+                placeholder="Enter contact person"
+                placeholderTextColor={theme.textSecondary}
               />
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Phone</Text>
+              <Text style={[styles.label, { color: theme.text }]}>Phone</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { 
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  borderColor: theme.textSecondary + '40'
+                }]}
                 value={newGrower.phone}
                 onChangeText={(text) => setNewGrower({...newGrower, phone: text})}
                 placeholder="Enter phone number"
+                placeholderTextColor={theme.textSecondary}
                 keyboardType="phone-pad"
               />
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={[styles.label, { color: theme.text }]}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { 
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  borderColor: theme.textSecondary + '40'
+                }]}
                 value={newGrower.email}
                 onChangeText={(text) => setNewGrower({...newGrower, email: text})}
                 placeholder="Enter email address"
+                placeholderTextColor={theme.textSecondary}
                 keyboardType="email-address"
               />
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Address</Text>
+              <Text style={[styles.label, { color: theme.text }]}>Address</Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[styles.input, { 
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  borderColor: theme.textSecondary + '40'
+                }]}
                 value={newGrower.address}
                 onChangeText={(text) => setNewGrower({...newGrower, address: text})}
                 placeholder="Enter address"
+                placeholderTextColor={theme.textSecondary}
                 multiline
                 numberOfLines={3}
               />
@@ -246,14 +257,13 @@ const GrowersManagement = () => {
             
             <View style={styles.modalActions}>
               <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.cancelButton, { backgroundColor: theme.textSecondary }]}
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              
               <TouchableOpacity 
-                style={[styles.modalButton, styles.saveButton]}
+                style={[styles.saveButton, { backgroundColor: theme.primary }]}
                 onPress={handleAddGrower}
               >
                 <Text style={styles.saveButtonText}>Add Grower</Text>
@@ -269,7 +279,6 @@ const GrowersManagement = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   scrollView: {
     flex: 1,
@@ -283,8 +292,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
-    marginTop: 16, // Add spacing at the top
-    paddingHorizontal: 8, // Add horizontal padding
+    marginTop: 16,
+    paddingHorizontal: 8,
   },
   headerTextContainer: {
     flex: 1,
@@ -292,39 +301,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#0f172a',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#64748b',
-  },
-  notificationButton: {
-    position: 'relative',
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notificationBadgeText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
   },
   section: {
     marginBottom: 24,
@@ -338,18 +318,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#0f172a',
-  },
-  addButton: {
-    backgroundColor: '#059669',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   optionCard: {
-    backgroundColor: '#ffffff',
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
@@ -369,28 +339,36 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#ecfdf5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   optionText: {
     flex: 1,
   },
   optionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#0f172a',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   optionDescription: {
     fontSize: 14,
-    color: '#94a3b8',
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   growerCard: {
-    backgroundColor: '#ffffff',
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -405,10 +383,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   growerIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#ecfdf5',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -419,40 +396,38 @@ const styles = StyleSheet.create({
   growerName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0f172a',
     marginBottom: 4,
   },
   growerCycles: {
     fontSize: 14,
-    color: '#94a3b8',
   },
   performanceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   performanceValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#059669',
     marginLeft: 4,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
     width: '90%',
-    maxHeight: '80%',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#0f172a',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -462,47 +437,40 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#334155',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 8,
+    borderWidth: 1,
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
   },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  modalButton: {
-    flex: 1,
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
+    marginTop: 20,
   },
   cancelButton: {
-    backgroundColor: '#f1f5f9',
-    marginRight: 10,
-  },
-  saveButton: {
-    backgroundColor: '#059669',
-    marginLeft: 10,
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginRight: 8,
   },
   cancelButtonText: {
-    color: '#64748b',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
+  saveButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginLeft: 8,
+  },
   saveButtonText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

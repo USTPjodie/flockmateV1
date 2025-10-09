@@ -4,6 +4,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeProvider';
+import { NotificationProvider, useNotifications } from './src/contexts/NotificationContext';
+import NotificationService from './src/services/notificationService';
 import { queryClient } from './src/lib/queryClient';
 import { QueryClientProvider } from '@tanstack/react-query';
 import Login from './src/components/Login';
@@ -27,7 +30,10 @@ import ChangePassword from './src/components/ChangePassword';
 import SplashScreen from './src/components/SplashScreen';
 import TestGrowers from './src/testGrowers';
 import { Home as HomeIcon, Package, User, Users } from 'lucide-react-native';
+import EnvironmentMonitoring from './src/components/EnvironmentMonitoring';
+import { Thermometer, Trophy } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -249,6 +255,18 @@ function NotificationsStack() {
   );
 }
 
+function MonitoringStack() {
+  return (
+    <Stack.Navigator id={undefined}>
+      <Stack.Screen 
+        name="EnvironmentMonitoring" 
+        component={EnvironmentMonitoring}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+}
+
 function TechnicianTabs() {
   return (
     <Tab.Navigator
@@ -334,6 +352,16 @@ function GrowerTabs() {
         }}
       />
       <Tab.Screen 
+        name="Monitoring" 
+        component={MonitoringStack}
+        options={{
+          tabBarLabel: 'Monitoring',
+          tabBarIcon: ({ color, size }) => (
+            <Thermometer color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
         name="Account" 
         component={GrowerAccountStack}
         options={{
@@ -378,7 +406,14 @@ function MainAppNavigator() {
 
 function AppContent() {
   const { loading } = useAuth();
+  const { theme, themeMode } = useTheme();
+  const notifications = useNotifications();
   const [showSplash, setShowSplash] = useState(true);
+
+  // Initialize notification service with context
+  useEffect(() => {
+    NotificationService.setNotificationContext(notifications);
+  }, [notifications]);
 
   // Hide splash screen after app is ready
   useEffect(() => {
@@ -404,11 +439,16 @@ function AppContent() {
   }
 
   return (
-    <NavigationContainer>
-      <MainAppNavigator />
-      <Toaster />
-      <StatusBar style="auto" />
-    </NavigationContainer>
+    <LinearGradient
+      colors={themeMode === 'dark' ? ['#0C3B2E', '#1A4D3D'] : ['#F8FAFC', '#E6F4EB']}
+      style={styles.gradientContainer}
+    >
+      <NavigationContainer>
+        <MainAppNavigator />
+        <Toaster />
+        <StatusBar style="auto" />
+      </NavigationContainer>
+    </LinearGradient>
   );
 }
 
@@ -416,13 +456,20 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppContent />
+        <ThemeProvider>
+          <NotificationProvider>
+            <AppContent />
+          </NotificationProvider>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  gradientContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',

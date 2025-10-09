@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "EnviroTrack",
-    "slug": "enviro-track",
+    "name": "Flockmate",
+    "slug": "flockmate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
