@@ -10,23 +10,44 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#6D9773"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Flockmate needs your location to provide accurate weather data for your poultry farm."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#6D9773"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.ustpjodie27.flockmate",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-build-properties"
-    ]
+      "expo-build-properties",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Flockmate to use your location to provide accurate weather data for your poultry farm."
+        }
+      ]
+    ],
+    "extra": {
+      "supabaseUrl": "https://mizksqfqtwmgwnxjevqi.supabase.co",
+      "supabaseAnonKey": "sb_publishable_oimeq0CBdRM2lctsOIYUeQ_uYDfTHMo"
+    }
   }
 }

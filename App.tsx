@@ -407,13 +407,13 @@ function MainAppNavigator() {
 function AppContent() {
   const { loading } = useAuth();
   const { theme, themeMode } = useTheme();
-  const notifications = useNotifications();
+  const { addNotification } = useNotifications();
   const [showSplash, setShowSplash] = useState(true);
 
-  // Initialize notification service with context
+  // Initialize notification service with callback
   useEffect(() => {
-    NotificationService.setNotificationContext(notifications);
-  }, [notifications]);
+    NotificationService.setAddNotificationCallback(addNotification);
+  }, [addNotification]);
 
   // Hide splash screen after app is ready
   useEffect(() => {

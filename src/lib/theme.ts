@@ -1,9 +1,9 @@
 // FLOCKMATE Theme Configuration
 export const COLORS = {
   // Primary Colors
-  primary: '#6D9773',        // Calm green - symbolizes growth and sustainability
-  primaryDark: '#0C3B2E',    // Deep forest green - for headers and dark mode
-  primaryLight: '#E6F4EB',   // Light green - for subtle gradients
+  primary: '#00623a',        // New green - symbolizes growth and sustainability
+  primaryDark: '#004d2e',    // Darker green - for headers and dark mode
+  primaryLight: '#e0f2e9',   // Light green - for subtle gradients
   accent: '#BB8A52',         // Warm brown-gold - for highlights and buttons
   highlight: '#FFBA00',      // Vibrant yellow - for gamification and key actions
   
@@ -103,7 +103,7 @@ export const LIGHT_THEME = {
 
 export const DARK_THEME = {
   background: COLORS.primaryDark,
-  backgroundGradient: [COLORS.primaryDark, '#1A4D3D'], // Gradient from deep forest to slightly lighter green
+  backgroundGradient: [COLORS.primaryDark, '#00331f'], // Gradient from deep green to slightly lighter green
   cardBackground: '#1E293B',
   text: COLORS.white,
   textSecondary: '#CBD5E1',
@@ -121,7 +121,7 @@ export const GRADIENTS = {
     end: { x: 1, y: 1 }
   },
   dark: {
-    colors: [COLORS.primaryDark, '#1A4D3D'],
+    colors: [COLORS.primaryDark, '#00331f'],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 }
   }

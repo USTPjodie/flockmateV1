@@ -42,7 +42,7 @@ const Account = () => {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Panel Header */}
-      <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 12, padding: 16 }]}>
+      <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
         <View style={styles.headerTextContainer}>
           <Text style={[styles.title, { color: theme.white }]}>Account</Text>
           <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage your profile and settings</Text>
@@ -57,7 +57,7 @@ const Account = () => {
               <User size={32} color={theme.primary} />
             </View>
             <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: theme.text }]}>{user?.full_name || 'User'}</Text>
+              <Text style={[styles.profileName, { color: theme.text }]}>{user?.user_metadata?.full_name || user?.email || 'User'}</Text>
               <View style={styles.emailContainer}>
                 <Mail size={16} color={theme.textSecondary} />
                 <Text style={[styles.profileEmail, { color: theme.textSecondary }]}>{user?.email || 'user@example.com'}</Text>
@@ -91,10 +91,10 @@ const Account = () => {
       {/* Sign Out Button */}
       <View style={styles.section}>
         <TouchableOpacity 
-          style={[styles.signOutButton, { backgroundColor: theme.error }]} 
+          style={[styles.signOutButton, { backgroundColor: theme.textSecondary }]} 
           onPress={handleSignOut}
         >
-          <LogOut size={20} color="#FFFFFF" />
+          <LogOut size={18} color="#FFFFFF" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
@@ -106,55 +106,57 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    paddingTop: 48,
+    paddingBottom: 100,
   },
   panelHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 16,
+    marginBottom: 12,
+    marginTop: 8,
     paddingHorizontal: 8,
   },
   headerTextContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 12,
   },
   profileCard: {
     borderRadius: 12,
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 3,
+    elevation: 1,
   },
   profileContent: {
-    padding: 20,
+    padding: 16,
   },
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
   },
@@ -163,20 +165,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profileEmail: {
-    fontSize: 16,
+    fontSize: 14,
     marginLeft: 8,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   optionCard: {
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -184,7 +186,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   optionContent: {
-    padding: 16,
+    padding: 12,
   },
   optionHeader: {
     flexDirection: 'row',
@@ -213,17 +215,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 2,
+    elevation: 1,
   },
   signOutText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
     marginLeft: 8,
   },

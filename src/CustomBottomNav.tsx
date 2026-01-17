@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Package, User, Users, Thermometer } from 'lucide-react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useTheme } from './contexts/ThemeProvider';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +24,7 @@ const CustomBottomNav = ({
   const userType = props.userType || 'grower';
   const insets = useSafeAreaInsets();
   const position = useRef(new Animated.Value(state.index)).current;
+  const { theme } = useTheme();
 
   // Update position animation when index changes
   useEffect(() => {
@@ -135,17 +137,17 @@ const CustomBottomNav = ({
               <View style={styles.tabContent}>
                 <IconComponent 
                   size={24} 
-                  color={isFocused ? '#6D9773' : '#94A3B8'} 
+                  color={isFocused ? theme.primary : '#94A3B8'} 
                   style={styles.icon}
                 />
                 <Text style={[
                   styles.label, 
-                  { color: isFocused ? '#6D9773' : '#94A3B8' }
+                  { color: isFocused ? theme.primary : '#94A3B8' }
                 ]}>
                   {getLabelForRoute(route.name)}
                 </Text>
                 {isFocused && (
-                  <View style={styles.activeDot} />
+                  <View style={[styles.activeDot, { backgroundColor: theme.primary }]} />
                 )}
               </View>
             </TouchableOpacity>
@@ -179,7 +181,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     height: 3,
-    backgroundColor: '#6D9773',
+    backgroundColor: '#00623a',
     borderRadius: 3,
     zIndex: 10,
   },
@@ -216,7 +218,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#6D9773',
+    backgroundColor: '#00623a',
   },
 });
 

@@ -1,114 +1,102 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card, CardContent } from './ui/card';
-import { Bell, X, CheckCircle, AlertTriangle, Info } from 'lucide-react-native';
+import { Bell, X, CheckCircle, AlertTriangle, Info, Package, Droplets, TrendingUp, Activity } from 'lucide-react-native';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useTheme } from '../contexts/ThemeProvider';
 
 const NotificationsPage = ({ navigation }) => {
-  const { notificationCount, resetNotifications } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const { theme } = useTheme();
-  
-  // Sample notifications data
-  const notifications = [
-    {
-      id: '1',
-      title: 'New Cycle Started',
-      message: 'Cycle #2023-001 has been started by John Smith Farm',
-      time: '2 hours ago',
-      type: 'success',
-      read: false,
-    },
-    {
-      id: '2',
-      title: 'Supply Delivery Due',
-      message: 'Feed delivery is scheduled for tomorrow at Robert Davis Coop',
-      time: '5 hours ago',
-      type: 'warning',
-      read: false,
-    },
-    {
-      id: '3',
-      title: 'Harvest Report Submitted',
-      message: 'Mary Johnson Poultry has submitted their harvest report',
-      time: '1 day ago',
-      type: 'info',
-      read: true,
-    },
-    {
-      id: '4',
-      title: 'DOC Loading Complete',
-      message: 'DOC loading has been completed for Cycle #2023-002',
-      time: '1 day ago',
-      type: 'success',
-      read: true,
-    },
-    {
-      id: '5',
-      title: 'Performance Alert',
-      message: 'Mortality rate is above threshold for Cycle #2023-001',
-      time: '2 days ago',
-      type: 'error',
-      read: true,
-    },
-  ];
 
   const getIconForType = (type: string) => {
     switch (type) {
       case 'success':
-        return <CheckCircle size={20} color="#10B981" />;
+        return <CheckCircle size={20} color={theme.success} />;
       case 'warning':
-        return <AlertTriangle size={20} color="#F59E0B" />;
+        return <AlertTriangle size={20} color={theme.warning} />;
       case 'error':
-        return <AlertTriangle size={20} color="#EF4444" />;
+        return <AlertTriangle size={20} color={theme.error} />;
       default:
-        return <Info size={20} color="#3B82F6" />;
+        return <Info size={20} color={theme.info} />;
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'cycle':
+        return <Package size={16} color={theme.textSecondary} />;
+      case 'supply':
+        return <Droplets size={16} color={theme.textSecondary} />;
+      case 'harvest':
+        return <Activity size={16} color={theme.textSecondary} />;
+      case 'performance':
+        return <TrendingUp size={16} color={theme.textSecondary} />;
+      default:
+        return <Bell size={16} color={theme.textSecondary} />;
     }
   };
 
   const getColorForType = (type: string) => {
     switch (type) {
       case 'success':
-        return '#10B981';
+        return theme.success;
       case 'warning':
-        return '#F59E0B';
+        return theme.warning;
       case 'error':
-        return '#EF4444';
+        return theme.error;
       default:
-        return '#3B82F6';
+        return theme.info;
     }
+  };
+
+  const formatTime = (timestamp: number) => {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return 'Yesterday';
+    return `${days}d ago`;
   };
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const markAsRead = (id: string) => {
-    // In a real app, this would update the notification status in the database
-    console.log('Marking notification as read:', id);
-  };
-
-  const markAllAsRead = () => {
-    // In a real app, this would update all notifications status in the database
-    console.log('Marking all notifications as read');
-    resetNotifications();
-  };
-
-  const deleteNotification = (id: string) => {
-    // In a real app, this would delete the notification from the database
-    console.log('Deleting notification:', id);
+  const handleNotificationPress = (notification: any) => {
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    // Handle navigation based on notification data
+    if (notification.data?.screen) {
+      navigation.navigate(notification.data.screen, notification.data.params);
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.primary }]}>
         <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
           <X size={24} color={theme.white} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.white }]}>Notifications</Text>
-        <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-          <Text style={[styles.markAllText, { color: theme.white + 'CC' }]}>Mark All Read</Text>
-        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={[styles.title, { color: theme.white }]}>Notifications</Text>
+          {unreadCount > 0 && (
+            <View style={[styles.badge, { backgroundColor: theme.highlight }]}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </View>
+        {unreadCount > 0 && (
+          <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
+            <Text style={[styles.markAllText, { color: theme.white + 'CC' }]}>Mark All</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView 
@@ -117,51 +105,68 @@ const NotificationsPage = ({ navigation }) => {
       >
         {notifications.length === 0 ? (
           <View style={styles.emptyState}>
-            <Bell size={48} color="#94A3B8" />
-            <Text style={styles.emptyStateTitle}>No Notifications</Text>
-            <Text style={styles.emptyStateText}>You're all caught up! Check back later for new notifications.</Text>
+            <Bell size={48} color={theme.textSecondary} />
+            <Text style={[styles.emptyStateTitle, { color: theme.text }]}>No Notifications</Text>
+            <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
+              You're all caught up! Check back later for new notifications.
+            </Text>
           </View>
         ) : (
           notifications.map((notification) => (
-            <Card 
-              key={notification.id} 
-              style={[
-                styles.notificationCard, 
-                !notification.read && styles.unreadCard
-              ]}
+            <TouchableOpacity
+              key={notification.id}
+              onPress={() => handleNotificationPress(notification)}
+              activeOpacity={0.7}
             >
-              <CardContent style={styles.cardContent}>
-                <View style={styles.notificationHeader}>
-                  <View style={[styles.iconContainer, { backgroundColor: `${getColorForType(notification.type)}10` }]}>
-                    {getIconForType(notification.type)}
-                  </View>
-                  <View style={styles.notificationInfo}>
-                    <Text style={[styles.notificationTitle, !notification.read && styles.unreadTitle]}>
-                      {notification.title}
-                    </Text>
-                    <Text style={styles.notificationMessage}>{notification.message}</Text>
-                  </View>
-                  <TouchableOpacity 
-                    onPress={() => deleteNotification(notification.id)}
-                    style={styles.deleteButton}
-                  >
-                    <X size={16} color="#94A3B8" />
-                  </TouchableOpacity>
-                </View>
-                
-                <View style={styles.notificationFooter}>
-                  <Text style={styles.notificationTime}>{notification.time}</Text>
-                  {!notification.read && (
+              <Card 
+                style={[
+                  styles.notificationCard,
+                  { backgroundColor: theme.cardBackground },
+                  !notification.read && [styles.unreadCard, { borderLeftColor: theme.primary }]
+                ]}
+              >
+                <CardContent style={styles.cardContent}>
+                  <View style={styles.notificationHeader}>
+                    <View style={[styles.iconContainer, { backgroundColor: `${getColorForType(notification.type)}15` }]}>
+                      {getIconForType(notification.type)}
+                    </View>
+                    <View style={styles.notificationInfo}>
+                      <View style={styles.titleRow}>
+                        <Text style={[
+                          styles.notificationTitle,
+                          { color: theme.text },
+                          !notification.read && styles.unreadTitle
+                        ]}>
+                          {notification.title}
+                        </Text>
+                        {getCategoryIcon(notification.category)}
+                      </View>
+                      <Text style={[styles.notificationMessage, { color: theme.textSecondary }]}>
+                        {notification.message}
+                      </Text>
+                    </View>
                     <TouchableOpacity 
-                      onPress={() => markAsRead(notification.id)}
-                      style={styles.markReadButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        deleteNotification(notification.id);
+                      }}
+                      style={styles.deleteButton}
                     >
-                      <Text style={styles.markReadText}>Mark as Read</Text>
+                      <X size={16} color={theme.textSecondary} />
                     </TouchableOpacity>
-                  )}
-                </View>
-              </CardContent>
-            </Card>
+                  </View>
+                  
+                  <View style={styles.notificationFooter}>
+                    <Text style={[styles.notificationTime, { color: theme.textSecondary }]}>
+                      {formatTime(notification.timestamp)}
+                    </Text>
+                    {!notification.read && (
+                      <View style={[styles.unreadDot, { backgroundColor: theme.primary }]} />
+                    )}
+                  </View>
+                </CardContent>
+              </Card>
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>
@@ -172,31 +177,49 @@ const NotificationsPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    paddingTop: 48,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#6D9773',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    padding: 12,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderBottomWidth: 0,
   },
   backButton: {
     padding: 8,
   },
+  headerContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ffffff',
+  },
+  badge: {
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    minWidth: 24,
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   markAllButton: {
-    padding: 8,
+    padding: 4,
   },
   markAllText: {
-    fontSize: 16,
-    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '500',
   },
   scrollView: {
@@ -204,7 +227,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingTop: 0,
+    paddingBottom: 100,
   },
   emptyState: {
     flex: 1,
@@ -215,20 +239,17 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#0f172a',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#64748b',
     textAlign: 'center',
     paddingHorizontal: 32,
   },
   notificationCard: {
-    backgroundColor: '#ffffff',
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -236,21 +257,20 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   unreadCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#059669',
+    borderLeftWidth: 3,
   },
   cardContent: {
-    padding: 16,
+    padding: 12,
   },
   notificationHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -258,39 +278,42 @@ const styles = StyleSheet.create({
   notificationInfo: {
     flex: 1,
   },
-  notificationTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 4,
+  },
+  notificationTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    flex: 1,
+    marginRight: 8,
   },
   unreadTitle: {
     fontWeight: 'bold',
   },
   notificationMessage: {
-    fontSize: 14,
-    color: '#64748b',
+    fontSize: 13,
+    lineHeight: 18,
   },
   deleteButton: {
-    padding: 8,
+    padding: 4,
     marginLeft: 8,
   },
   notificationFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 4,
   },
   notificationTime: {
-    fontSize: 12,
-    color: '#94A3B8',
+    fontSize: 11,
   },
-  markReadButton: {
-    padding: 6,
-  },
-  markReadText: {
-    fontSize: 12,
-    color: '#059669',
-    fontWeight: '500',
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });
 

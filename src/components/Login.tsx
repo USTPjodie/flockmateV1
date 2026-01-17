@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
-import { Bird, Loader2, User, Wrench, Sprout } from "lucide-react-native";
+import { Bird, Loader2, User, Wrench, Sprout, Eye, EyeOff } from "lucide-react-native";
 import { useToast } from "../hooks/use-toast";
 import { useTheme } from "../contexts/ThemeProvider";
 
@@ -12,6 +12,7 @@ export default function Login() {
   const [role, setRole] = useState<"grower" | "technician" | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const { theme } = useTheme();
@@ -145,21 +146,33 @@ export default function Login() {
 
               <View style={styles.formGroup}>
                 <Text style={[styles.label, { color: theme.text }]}>Password</Text>
-                <TextInput
-                  style={[styles.input, { 
-                    backgroundColor: theme.background,
-                    color: theme.text,
-                    borderColor: theme.textSecondary + '40'
-                  }]}
-                  placeholder="Create a password"
-                  placeholderTextColor={theme.textSecondary}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="newPassword"
-                />
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.passwordInput, { 
+                      backgroundColor: theme.background,
+                      color: theme.text,
+                      borderColor: theme.textSecondary + '40'
+                    }]}
+                    placeholder="Create a password"
+                    placeholderTextColor={theme.textSecondary}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="newPassword"
+                  />
+                  <TouchableOpacity 
+                    style={styles.eyeButton}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <Eye size={20} color={theme.textSecondary} />
+                    ) : (
+                      <EyeOff size={20} color={theme.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.formGroup}>
@@ -233,21 +246,33 @@ export default function Login() {
 
               <View style={styles.formGroup}>
                 <Text style={[styles.label, { color: theme.text }]}>Password</Text>
-                <TextInput
-                  style={[styles.input, { 
-                    backgroundColor: theme.background,
-                    color: theme.text,
-                    borderColor: theme.textSecondary + '40'
-                  }]}
-                  placeholder="Enter your password"
-                  placeholderTextColor={theme.textSecondary}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="password"
-                />
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.passwordInput, { 
+                      backgroundColor: theme.background,
+                      color: theme.text,
+                      borderColor: theme.textSecondary + '40'
+                    }]}
+                    placeholder="Enter your password"
+                    placeholderTextColor={theme.textSecondary}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="password"
+                  />
+                  <TouchableOpacity 
+                    style={styles.eyeButton}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <Eye size={20} color={theme.textSecondary} />
+                    ) : (
+                      <EyeOff size={20} color={theme.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <TouchableOpacity
@@ -340,6 +365,24 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     fontSize: 16,
+  },
+  passwordContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    paddingRight: 48,
+    fontSize: 16,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 12,
+    padding: 4,
   },
   roleContainer: {
     flexDirection: 'row',

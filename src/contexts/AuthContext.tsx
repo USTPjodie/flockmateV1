@@ -1,216 +1,240 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import * as SQLite from '../database/sqlite';
+import { supabase } from '../lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { randomUUID } from 'expo-crypto';
-
-// Simple password hashing function (in production, use a proper library)
-const hashPassword = (password: string): string => {
-  // This is a simple hash for demonstration - use a proper library like bcrypt in production
-  return btoa(password).split('').reverse().join('');
-};
-
-// User and Session types to replace Supabase types
-interface LocalUser {
-  id: string;
-  email: string;
-  full_name?: string;
-  role?: string;
-  created_at: string;
-  updated_at: string;
-  password_hash?: string;
-}
-
-interface LocalSession {
-  id: string;
-  user_id: string;
-  expires_at: string;
-  created_at: string;
-}
+import OfflineService from '../services/offlineService';
+import * as Crypto from 'expo-crypto';
 
 interface AuthContextType {
-  user: LocalUser | null;
-  session: LocalSession | null;
+  user: User | null;
+  session: Session | null;
   loading: boolean;
   role: string | null;
+  isOfflineMode: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const OFFLINE_SESSION_KEY = '@offline_session';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<LocalUser | null>(null);
-  const [session, setSession] = useState<LocalSession | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   useEffect(() => {
-    // Check active session
-    const checkSession = async () => {
-      try {
-        // Clear any existing state first
-        setUser(null);
-        setSession(null);
-        setRole(null);
-        
-        const sessionId = await AsyncStorage.getItem('currentSessionId');
-        if (sessionId) {
-          const sessionData: any = await SQLite.getSessionById(sessionId);
-          if (sessionData) {
-            setSession(sessionData as LocalSession);
-            
-            // Get user data
-            const userData: any = await SQLite.getUserById(sessionData.user_id);
-            if (userData) {
-              setUser(userData as LocalUser);
-              setRole(userData.role || null);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
-        // Clear any potentially corrupted state
-        await AsyncStorage.removeItem('currentSessionId');
-      } finally {
-        setLoading(false);
+    initializeAuth();
+    
+    // Listen for network status changes
+    const removeListener = OfflineService.addNetworkListener((isOnline) => {
+      if (isOnline && isOfflineMode) {
+        // Try to restore online session when back online
+        restoreOnlineSession();
       }
-    };
+    });
 
-    checkSession();
+    return () => removeListener();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const initializeAuth = async () => {
     try {
-      // Clear any existing state first
-      setUser(null);
-      setSession(null);
-      setRole(null);
-      
-      // Hash the provided password for comparison
-      const hashedPassword = hashPassword(password);
-      
-      // Find user by email
-      const userData: any = await SQLite.getUserByEmail(email);
-      
-      if (!userData) {
-        throw new Error('Invalid email or password');
+      // Check if online
+      const isOnline = await OfflineService.checkConnection();
+
+      if (isOnline) {
+        // Try normal authentication
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setRole(session?.user?.user_metadata?.role ?? null);
+          setIsOfflineMode(false);
+          
+          // Save session for offline use
+          await saveOfflineSession(session);
+        } else {
+          // Check for offline session
+          await loadOfflineSession();
+        }
+      } else {
+        // Load offline session
+        await loadOfflineSession();
       }
-      
-      // Check password
-      if (userData.password_hash !== hashedPassword) {
-        throw new Error('Invalid email or password');
-      }
-      
-      // Create session
-      const sessionId = randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // Session expires in 7 days
-      
-      const sessionData = {
-        id: sessionId,
-        userId: userData.id,
-        expiresAt: expiresAt
-      };
-      
-      await SQLite.createSession(sessionData);
-      
-      // Store session ID in AsyncStorage
-      await AsyncStorage.setItem('currentSessionId', sessionId);
-      
-      // Set state
-      setUser(userData as LocalUser);
-      setRole(userData.role || null);
-      
-      const sessionResult: LocalSession = {
-        id: sessionId,
-        user_id: userData.id,
-        expires_at: expiresAt.toISOString(),
-        created_at: new Date().toISOString()
-      };
-      
-      setSession(sessionResult);
     } catch (error) {
-      // Clear state on error
-      setUser(null);
-      setSession(null);
-      setRole(null);
-      await AsyncStorage.removeItem('currentSessionId');
-      throw error;
+      console.error('Auth initialization error:', error);
+      // Fallback to offline session
+      await loadOfflineSession();
+    } finally {
+      setLoading(false);
+    }
+
+    // Listen for auth changes (only works when online)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setRole(session?.user?.user_metadata?.role ?? null);
+      
+      if (session) {
+        await saveOfflineSession(session);
+        setIsOfflineMode(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  };
+
+  const saveOfflineSession = async (session: Session) => {
+    try {
+      await AsyncStorage.setItem(OFFLINE_SESSION_KEY, JSON.stringify({
+        user: session.user,
+        role: session.user.user_metadata?.role,
+        savedAt: Date.now()
+      }));
+    } catch (error) {
+      console.error('Error saving offline session:', error);
+    }
+  };
+
+  const loadOfflineSession = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(OFFLINE_SESSION_KEY);
+      if (stored) {
+        const { user, role } = JSON.parse(stored);
+        setUser(user);
+        setRole(role);
+        setIsOfflineMode(true);
+        console.log('📱 Loaded offline session for:', user.email);
+      }
+    } catch (error) {
+      console.error('Error loading offline session:', error);
+    }
+  };
+
+  const restoreOnlineSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+        setRole(session.user.user_metadata?.role ?? null);
+        setIsOfflineMode(false);
+        console.log('🌐 Restored online session');
+      }
+    } catch (error) {
+      console.error('Error restoring online session:', error);
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const isOnline = await OfflineService.checkConnection();
+
+    if (isOnline) {
+      // Online login
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      setSession(data.session);
+      setUser(data.user);
+      setRole(data.user?.user_metadata?.role ?? null);
+      setIsOfflineMode(false);
+      
+      // Save credentials and session for offline use
+      const hashedPassword = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        password
+      );
+      await OfflineService.saveOfflineCredentials(email, hashedPassword);
+      await saveOfflineSession(data.session);
+    } else {
+      // Offline login - verify against stored credentials
+      const storedCreds = await OfflineService.getOfflineCredentials();
+      if (!storedCreds || storedCreds.email !== email) {
+        throw new Error('No offline credentials found. Please connect to the internet for first login.');
+      }
+
+      const hashedPassword = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        password
+      );
+
+      if (hashedPassword !== storedCreds.encryptedPassword) {
+        throw new Error('Invalid credentials');
+      }
+
+      // Load offline session
+      await loadOfflineSession();
+      console.log('✅ Offline login successful');
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string, role: string) => {
     try {
-      // Clear any existing state first
-      setUser(null);
-      setSession(null);
-      setRole(null);
-      await AsyncStorage.removeItem('currentSessionId');
+      console.log('Attempting signup with:', { email, fullName, role });
       
-      // Check if user already exists
-      const existingUser: any = await SQLite.getUserByEmail(email);
-      if (existingUser) {
-        throw new Error('User already exists with this email');
-      }
-      
-      // For growers and technicians, check if they're pre-approved
-      if (role === 'grower' || role === 'technician') {
-        // Check if the email exists in the growers table
-        const approvedGrower: any = await SQLite.getGrowerByEmail(email);
-        if (!approvedGrower) {
-          throw new Error(`Email ${email} is not approved for ${role} registration. Please contact an administrator.`);
-        }
-      }
-      
-      // Hash password
-      const hashedPassword = hashPassword(password);
-      
-      // Create user
-      const userId = randomUUID();
-      const userData = {
-        id: userId,
+      const { data, error } = await supabase.auth.signUp({
         email,
-        passwordHash: hashedPassword,
-        fullName,
-        role
-      };
-      
-      await SQLite.createUser(userData);
-      
-      // Automatically sign in the user
-      await signIn(email, password);
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role,
+          },
+          emailRedirectTo: undefined,
+        },
+      });
+
+      if (error) {
+        console.error('Signup error:', error);
+        throw error;
+      }
+
+      console.log('Signup successful:', data);
+      console.log('User:', data.user);
+      console.log('Session:', data.session);
+
+      // Supabase will automatically sign in the user after signup
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+        setRole(role);
+      } else if (data.user && !data.session) {
+        // Email confirmation required - notify user
+        console.log('Email confirmation required');
+      }
     } catch (error) {
-      // Clear state on error
-      setUser(null);
-      setSession(null);
-      setRole(null);
-      await AsyncStorage.removeItem('currentSessionId');
+      console.error('Signup failed:', error);
       throw error;
     }
   };
 
   const signOut = async () => {
-    try {
-      if (session) {
-        await SQLite.deleteSession(session.id);
-      }
-      await AsyncStorage.removeItem('currentSessionId');
-      setUser(null);
-      setSession(null);
-      setRole(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      // Force clear state even if there's an error
-      await AsyncStorage.removeItem('currentSessionId');
-      setUser(null);
-      setSession(null);
-      setRole(null);
+    const isOnline = await OfflineService.checkConnection();
+    
+    if (isOnline) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     }
+
+    // Clear offline data
+    await AsyncStorage.removeItem(OFFLINE_SESSION_KEY);
+    await OfflineService.clearOfflineCredentials();
+
+    setUser(null);
+    setSession(null);
+    setRole(null);
+    setIsOfflineMode(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, role, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, role, isOfflineMode, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

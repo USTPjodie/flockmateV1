@@ -1,44 +1,30 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useAuth } from "./contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
 import { Sprout, Phone, MapPin } from "lucide-react-native";
+import * as DataService from './services/dataService';
 
 export default function Growers() {
   const { user } = useAuth();
+  const [growers, setGrowers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Mock data for demonstration
-  const { data: growers, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/technician/growers", user?.id],
-    enabled: !!user?.id,
-  });
+  useEffect(() => {
+    loadGrowers();
+  }, []);
 
-  const mockGrowers = [
-    {
-      id: "1",
-      name: "Green Valley Farms",
-      owner: "John Smith",
-      location: "Springfield, IL",
-      phone: "(555) 123-4567",
-      activeCycles: 2,
-    },
-    {
-      id: "2",
-      name: "Sunset Poultry",
-      owner: "Sarah Johnson",
-      location: "Riverside, CA",
-      phone: "(555) 987-6543",
-      activeCycles: 1,
-    },
-    {
-      id: "3",
-      name: "Meadowbrook Farms",
-      owner: "Robert Davis",
-      location: "Portland, OR",
-      phone: "(555) 456-7890",
-      activeCycles: 3,
-    },
-  ];
+  const loadGrowers = async () => {
+    try {
+      setLoading(true);
+      const data = await DataService.getAllGrowers();
+      setGrowers(data || []);
+    } catch (error) {
+      console.error('Error loading growers:', error);
+      setGrowers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -47,43 +33,48 @@ export default function Growers() {
         <Text style={styles.pageSubtitle}>Manage your grower accounts</Text>
       </View>
 
-      <View style={styles.searchContainer}>
-        <TouchableOpacity style={styles.searchButton}>
-          <Text style={styles.searchButtonText}>Search Growers</Text>
-        </TouchableOpacity>
-      </View>
-
-      {mockGrowers.map((grower) => (
-        <TouchableOpacity key={grower.id} style={styles.growerCard}>
-          <View style={styles.growerHeader}>
-            <View style={styles.iconContainer}>
-              <Sprout size={24} color="#2d7a4f" />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#00623a" />
+          <Text style={styles.loadingText}>Loading growers...</Text>
+        </View>
+      ) : growers.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No growers found</Text>
+        </View>
+      ) : (
+        growers.map((grower) => (
+          <TouchableOpacity key={grower.id} style={styles.growerCard}>
+            <View style={styles.growerHeader}>
+              <View style={styles.iconContainer}>
+                <Sprout size={24} color="#00623a" />
+              </View>
+              <View style={styles.growerInfo}>
+                <Text style={styles.growerName}>{grower.name}</Text>
+                <Text style={styles.growerOwner}>Owner: {grower.owner}</Text>
+              </View>
             </View>
-            <View style={styles.growerInfo}>
-              <Text style={styles.growerName}>{grower.name}</Text>
-              <Text style={styles.growerOwner}>Owner: {grower.owner}</Text>
+            
+            <View style={styles.growerDetails}>
+              <View style={styles.detailRow}>
+                <MapPin size={16} color="#666666" />
+                <Text style={styles.detailText}>{grower.location}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Phone size={16} color="#666666" />
+                <Text style={styles.detailText}>{grower.phone}</Text>
+              </View>
             </View>
-          </View>
-          
-          <View style={styles.growerDetails}>
-            <View style={styles.detailRow}>
-              <MapPin size={16} color="#666666" />
-              <Text style={styles.detailText}>{grower.location}</Text>
+            
+            <View style={styles.growerStats}>
+              <View style={styles.stat}>
+                <Text style={styles.statValue}>Active</Text>
+                <Text style={styles.statLabel}>Status</Text>
+              </View>
             </View>
-            <View style={styles.detailRow}>
-              <Phone size={16} color="#666666" />
-              <Text style={styles.detailText}>{grower.phone}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.growerStats}>
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>{grower.activeCycles}</Text>
-              <Text style={styles.statLabel}>Active Cycles</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
+          </TouchableOpacity>
+        ))
+      )}
     </ScrollView>
   );
 }
@@ -95,18 +86,21 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 80,
+    paddingTop: 48,
+    paddingBottom: 100,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 12,
+    marginTop: 8,
   },
   pageTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#000000",
+    marginBottom: 4,
   },
   pageSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666666",
   },
   searchContainer: {
@@ -123,32 +117,53 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   searchButtonText: {
-    color: "#2d7a4f",
+    color: "#00623a",
     fontSize: 16,
     fontWeight: "500",
     textAlign: "center",
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#666666",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#666666",
+  },
   growerCard: {
     backgroundColor: "#ffffff",
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 12,
+    marginBottom: 10,
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   growerHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(45, 122, 79, 0.1)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 98, 58, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -157,32 +172,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   growerName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#000000",
     marginBottom: 4,
   },
   growerOwner: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#666666",
   },
   growerDetails: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   detailText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#666666",
     marginLeft: 8,
   },
   growerStats: {
     borderTopWidth: 1,
     borderTopColor: "#e6e6e6",
-    paddingTop: 12,
+    paddingTop: 10,
   },
   stat: {
     alignItems: "center",
@@ -190,7 +205,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2d7a4f",
+    color: "#00623a",
   },
   statLabel: {
     fontSize: 12,

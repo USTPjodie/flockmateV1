@@ -3,11 +3,10 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'rea
 import { Card, CardContent } from './components/ui/card';
 import { Calendar, Users, Package, ChevronRight, Plus } from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import * as SQLite from './database/sqlite';
-import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useTheme } from './contexts/ThemeProvider';
+import * as DataService from './services/dataService';
 
 const Cycles = ({ route }: any) => {
   const navigation = useNavigation();
@@ -28,16 +27,15 @@ const Cycles = ({ route }: any) => {
       setLoading(true);
       let cyclesData: any = [];
       
-      if (role === 'grower' && user?.id) {
+      if (role === 'grower' && user?.email) {
         // For growers, only show cycles linked to them
-        // We need to find the grower record associated with this user
-        const growerData: any = await SQLite.getGrowerByEmail(user.email);
+        const growerData: any = await DataService.getGrowerByEmail(user.email);
         if (growerData) {
-          cyclesData = await SQLite.getCyclesByGrowerId(growerData.id);
+          cyclesData = await DataService.getCyclesByGrowerId(growerData.id);
         }
       } else {
         // For technicians and other roles, show all cycles
-        cyclesData = await SQLite.getAllCycles();
+        cyclesData = await DataService.getAllCycles();
       }
       
       setCycles(cyclesData || []);
@@ -82,7 +80,7 @@ const Cycles = ({ route }: any) => {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Panel Header */}
-        <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 12, padding: 16 }]}>
+        <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
           <View style={styles.headerTextContainer}>
             <Text style={[styles.title, { color: theme.white }]}>Poultry Cycles</Text>
             <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage production cycles</Text>
@@ -176,26 +174,27 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingTop: 48,
+    paddingBottom: 100,
   },
   panelHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 16,
+    marginBottom: 12,
+    marginTop: 8,
     paddingHorizontal: 8,
   },
   headerTextContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -204,7 +203,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   addCycleButton: {
@@ -236,7 +235,7 @@ const styles = StyleSheet.create({
   },
   cycleCard: {
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -244,16 +243,17 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   cycleContent: {
-    padding: 16,
+    padding: 12,
+    paddingVertical: 10,
   },
   cycleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   cycleName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   cycleHeaderRight: {
@@ -261,11 +261,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   status: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 20,
+    paddingVertical: 3,
+    borderRadius: 12,
     overflow: 'hidden',
     marginRight: 8,
   },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailText: {
-    fontSize: 14,
+    fontSize: 13,
     marginLeft: 4,
   },
 });

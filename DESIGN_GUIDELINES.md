@@ -3,8 +3,8 @@
 ## Color Palette
 
 ### Primary Colors
-- **Primary Green**: `#6D9773` - Calm green symbolizing growth and sustainability
-- **Deep Forest Green**: `#0C3B2E` - Used for headers, navigation bar, and dark mode backgrounds
+- **Primary Green**: `#00623a` - New green symbolizing growth and sustainability
+- **Deep Forest Green**: `#004d2e` - Used for headers, navigation bar, and dark mode backgrounds
 - **Warm Brown-Gold**: `#BB8A52` - Accent color for highlights, icons, and buttons
 - **Vibrant Yellow**: `#FFBA00` - Used for gamification badges, progress indicators, and key actions
 
@@ -74,7 +74,7 @@
 
 ### Buttons
 - **Primary Button**:
-  - Background: Primary Green (`#6D9773`)
+  - Background: Primary Green (`#00623a`)
   - Text: White
   - Border Radius: 12px
   - Padding: 12px 24px
@@ -119,7 +119,7 @@
 ## Dark Mode Implementation
 
 ### Background Colors
-- **Main Background**: Deep Forest Green (`#0C3B2E`)
+- **Main Background**: Deep Forest Green (`#004d2e`)
 - **Card Background**: Dark Slate (`#1E293B`)
 - **Text**: White (`#FFFFFF`)
 - **Secondary Text**: Light Gray (`#CBD5E1`)

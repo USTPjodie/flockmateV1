@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#059669',
+    backgroundColor: '#00623a',
     borderRadius: 8,
     padding: 16,
     marginTop: 10,
@@ -252,10 +252,10 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   infoCard: {
-    backgroundColor: '#ecfdf5',
+    backgroundColor: '#e0f2e9',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#059669',
+    borderColor: '#00623a',
   },
   infoContent: {
     padding: 16,
@@ -268,12 +268,12 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#059669',
+    color: '#00623a',
     marginLeft: 8,
   },
   infoText: {
     fontSize: 14,
-    color: '#059669',
+    color: '#00623a',
     lineHeight: 20,
   },
 });
