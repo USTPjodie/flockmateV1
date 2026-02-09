@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 // @ts-ignore - react-native-chart-kit has type compatibility issues with React 19
 import { BarChart } from 'react-native-chart-kit';
 import { Card, CardContent } from './components/ui/card';
-import { Package, Users, TrendingUp, Bell, Calendar, Scale, Activity, Award, Zap, WifiOff } from 'lucide-react-native';
+import { Package, Users, TrendingUp, Bell, Scale, Activity, Award, Zap, WifiOff } from 'lucide-react-native';
 import { Bird } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as DataService from './services/dataService';
@@ -24,7 +24,6 @@ const Home = () => {
     avgPerformance: 0,
     upcomingTasks: 0,
   });
-  const [myCycles, setMyCycles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBarIndex, setSelectedBarIndex] = useState<number | null>(null);
   const [isOnline, setIsOnline] = useState(true);
@@ -111,10 +110,6 @@ const Home = () => {
             avgPerformance,
             upcomingTasks,
           });
-          
-          // Get the 3 most recent cycles for display
-          const recentCycles = cycles?.slice(0, 3) || [];
-          setMyCycles(recentCycles);
         }
       } else {
         // For technicians, load the existing data
@@ -134,10 +129,6 @@ const Home = () => {
           avgPerformance,
           upcomingTasks: 12, // Demo value
         });
-        
-        // Get the 3 most recent cycles for display
-        const recentCycles = cycles?.slice(0, 3) || [];
-        setMyCycles(recentCycles);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -168,45 +159,40 @@ const Home = () => {
       : 'Welcome back, Grower!';
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Fixed Header with Notification Bell and Offline Indicator */}
+      <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
+        <View style={styles.headerTextContainer}>
+          <Text style={[styles.title, { color: theme.white }]}>Dashboard</Text>
+          <View style={styles.subtitleRow}>
+            <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>{getWelcomeMessage()}</Text>
+            {(isOfflineMode || !isOnline) && (
+              <View style={styles.offlineBadge}>
+                <WifiOff size={12} color="#FFFFFF" />
+                <Text style={styles.offlineText}>Offline</Text>
+              </View>
+            )}
+          </View>
+        </View>
+        <TouchableOpacity 
+          style={[styles.notificationButton, { backgroundColor: theme.white + '20' }]}
+          onPress={handleNotificationPress}
+          activeOpacity={0.7}
+        >
+          <Bell size={20} color={theme.white} />
+          {unreadCount > 0 && (
+            <View style={[styles.notificationBadge, { backgroundColor: theme.highlight }]}>
+              <Text style={styles.notificationBadgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Header with Notification Bell and Offline Indicator */}
-        <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
-          <View style={styles.headerTextContainer}>
-            <Text style={[styles.title, { color: theme.white }]}>Dashboard</Text>
-            <View style={styles.subtitleRow}>
-              <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>{getWelcomeMessage()}</Text>
-              {(isOfflineMode || !isOnline) && (
-                <View style={styles.offlineBadge}>
-                  <WifiOff size={12} color="#FFFFFF" />
-                  <Text style={styles.offlineText}>Offline</Text>
-                </View>
-              )}
-            </View>
-          </View>
-          <TouchableOpacity 
-            style={[styles.notificationButton, { backgroundColor: theme.white + '20' }]}
-            onPress={handleNotificationPress}
-            activeOpacity={0.7}
-          >
-            <Bell size={20} color={theme.white} />
-            {unreadCount > 0 && (
-              <View style={[styles.notificationBadge, { backgroundColor: theme.highlight }]}>
-                <Text style={styles.notificationBadgeText}>{unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
 
         {/* Sync Status Banner */}
         {pendingSyncCount > 0 && (
@@ -219,110 +205,6 @@ const Home = () => {
               }
             </Text>
           </View>
-        )}
-
-        {/* Performance Graph - Only for Growers */}
-        {role === 'grower' && !loading && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Performance Trend</Text>
-            <Card style={[styles.graphCard, { backgroundColor: theme.cardBackground }]}>
-              <CardContent style={styles.graphContent}>
-                <View style={styles.chartContainer}>
-                  {/* Bar Chart */}
-                  {/* @ts-ignore - Type compatibility issue with React 19 */}
-                  <BarChart
-                    data={{
-                      labels: ['C1', 'C2', 'C3', 'C4', 'C5'],
-                      datasets: [
-                        {
-                          data: [
-                            Math.max(stats.avgPerformance - 10, 70),
-                            Math.max(stats.avgPerformance - 5, 75),
-                            Math.max(stats.avgPerformance - 2, 80),
-                            Math.max(stats.avgPerformance + 3, 85),
-                            Math.max(stats.avgPerformance, 88)
-                          ]
-                        }
-                      ]
-                    }}
-                    width={Dimensions.get('window').width - 80}
-                    height={180}
-                    yAxisSuffix="%"
-                    fromZero={true}
-                    chartConfig={{
-                      backgroundColor: theme.cardBackground,
-                      backgroundGradientFrom: theme.cardBackground,
-                      backgroundGradientTo: theme.cardBackground,
-                      decimalPlaces: 0,
-                      color: (opacity = 1) => `rgba(0, 98, 58, ${opacity * 0.8})`,
-                      labelColor: (opacity = 1) => theme.textSecondary,
-                      barPercentage: 0.5,
-                      fillShadowGradient: theme.primary,
-                      fillShadowGradientOpacity: 1,
-                      style: {
-                        borderRadius: 16
-                      },
-                      propsForBackgroundLines: {
-                        strokeDasharray: '',
-                        stroke: theme.textSecondary,
-                        strokeOpacity: 0.1,
-                        strokeWidth: 1
-                      }
-                    }}
-                    style={{
-                      marginVertical: 8,
-                      borderRadius: 16
-                    }}
-                  />
-                  
-                  {/* Touchable overlay for bar interaction */}
-                  <View style={styles.barsOverlay}>
-                    {['C1', 'C2', 'C3', 'C4', 'C5'].map((label, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.barTouchArea}
-                        onPress={() => {
-                          setSelectedBarIndex(index);
-                          setTimeout(() => setSelectedBarIndex(null), 2000);
-                        }}
-                      >
-                        {selectedBarIndex === index && (
-                          <View style={[styles.valueTooltip, { backgroundColor: theme.primary }]}>
-                            <Text style={styles.tooltipText}>
-                              {[
-                                Math.max(stats.avgPerformance - 10, 70),
-                                Math.max(stats.avgPerformance - 5, 75),
-                                Math.max(stats.avgPerformance - 2, 80),
-                                Math.max(stats.avgPerformance + 3, 85),
-                                Math.max(stats.avgPerformance, 88)
-                              ][index].toFixed(0)}%
-                            </Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-                <Text style={[styles.graphCaption, { color: theme.textSecondary }]}>Performance (%) across your last 5 cycles</Text>
-              </CardContent>
-            </Card>
-          </View>
-        )}
-
-        {/* Debug: Show why graph might not be showing */}
-        {role !== 'grower' && (
-          <Card style={[styles.graphCard, { backgroundColor: theme.cardBackground }]}>
-            <CardContent style={styles.graphContent}>
-              <Text style={[styles.graphCaption, { color: theme.textSecondary }]}>Graph only shows for growers (you are: {role})</Text>
-            </CardContent>
-          </Card>
-        )}
-        {role === 'grower' && loading && (
-          <Card style={[styles.graphCard, { backgroundColor: theme.cardBackground }]}>
-            <CardContent style={styles.graphContent}>
-              <Text style={[styles.graphCaption, { color: theme.textSecondary }]}>Loading data...</Text>
-            </CardContent>
-          </Card>
         )}
 
         {/* Stats Cards - Horizontal 3-column layout like reference */}
@@ -432,53 +314,109 @@ const Home = () => {
           )}
         </View>
 
-        {/* My Cycles Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {role === 'grower' ? 'My Cycles' : 'Recent Cycles'}
-          </Text>
-          {myCycles.length === 0 ? (
-            <Card style={[styles.emptyCard, { backgroundColor: theme.cardBackground }]}>
-              <CardContent style={styles.emptyCardContent}>
-                <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                  {role === 'grower' 
-                    ? 'You have not been assigned to any cycles yet.' 
-                    : 'No cycles found.'}
-                </Text>
+        {/* Performance Graph - Only for Growers */}
+        {role === 'grower' && !loading && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Performance Trend</Text>
+            <Card style={[styles.graphCard, { backgroundColor: theme.cardBackground }]}>
+              <CardContent style={styles.graphContent}>
+                <View style={styles.chartContainer}>
+                  {/* Bar Chart */}
+                  {/* @ts-ignore - Type compatibility issue with React 19 */}
+                  <BarChart
+                    data={{
+                      labels: ['C1', 'C2', 'C3', 'C4', 'C5'],
+                      datasets: [
+                        {
+                          data: [
+                            Math.max(stats.avgPerformance - 10, 70),
+                            Math.max(stats.avgPerformance - 5, 75),
+                            Math.max(stats.avgPerformance - 2, 80),
+                            Math.max(stats.avgPerformance + 3, 85),
+                            Math.max(stats.avgPerformance, 88)
+                          ]
+                        }
+                      ]
+                    }}
+                    width={Dimensions.get('window').width - 80}
+                    height={180}
+                    yAxisSuffix="%"
+                    fromZero={true}
+                    chartConfig={{
+                      backgroundColor: theme.cardBackground,
+                      backgroundGradientFrom: theme.cardBackground,
+                      backgroundGradientTo: theme.cardBackground,
+                      decimalPlaces: 0,
+                      color: (opacity = 1) => `rgba(0, 98, 58, ${opacity * 0.8})`,
+                      labelColor: (opacity = 1) => theme.textSecondary,
+                      barPercentage: 0.5,
+                      fillShadowGradient: theme.primary,
+                      fillShadowGradientOpacity: 1,
+                      style: {
+                        borderRadius: 16
+                      },
+                      propsForBackgroundLines: {
+                        strokeDasharray: '',
+                        stroke: theme.textSecondary,
+                        strokeOpacity: 0.1,
+                        strokeWidth: 1
+                      }
+                    }}
+                    style={{
+                      marginVertical: 8,
+                      borderRadius: 16
+                    }}
+                  />
+                  
+                  {/* Touchable overlay for bar interaction */}
+                  <View style={styles.barsOverlay}>
+                    {['C1', 'C2', 'C3', 'C4', 'C5'].map((label, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.barTouchArea}
+                        onPress={() => {
+                          setSelectedBarIndex(index);
+                          setTimeout(() => setSelectedBarIndex(null), 2000);
+                        }}
+                      >
+                        {selectedBarIndex === index && (
+                          <View style={[styles.valueTooltip, { backgroundColor: theme.primary }]}>
+                            <Text style={styles.tooltipText}>
+                              {[
+                                Math.max(stats.avgPerformance - 10, 70),
+                                Math.max(stats.avgPerformance - 5, 75),
+                                Math.max(stats.avgPerformance - 2, 80),
+                                Math.max(stats.avgPerformance + 3, 85),
+                                Math.max(stats.avgPerformance, 88)
+                              ][index].toFixed(0)}%
+                            </Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+                <Text style={[styles.graphCaption, { color: theme.textSecondary }]}>Performance (%) across your last 5 cycles</Text>
               </CardContent>
             </Card>
-          ) : (
-            myCycles.map((cycle) => (
-              <Card key={cycle.id} style={[styles.cycleCard, { backgroundColor: theme.cardBackground }]}>
-                <CardContent style={styles.cycleContent}>
-                  <View style={styles.cycleHeader}>
-                    <Text style={[styles.cycleName, { color: theme.text }]}>{cycle.name}</Text>
-                    <Text style={[styles.status, 
-                      cycle.status === 'Active' ? styles.activeStatus :
-                      cycle.status === 'Harvesting' ? styles.harvestingStatus :
-                      styles.newStatus,
-                      { color: cycle.status === 'Active' ? '#166534' : cycle.status === 'Harvesting' ? '#9a3412' : '#1e40af' }
-                    ]}>
-                      {cycle.status}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.cycleDetails}>
-                    <View style={styles.detailItem}>
-                      <Calendar size={16} color={theme.textSecondary} />
-                      <Text style={[styles.detailText, { color: theme.textSecondary }]}>Start: {formatDate(cycle.start_date)}</Text>
-                    </View>
-                    
-                    <View style={styles.detailItem}>
-                      <Bird size={16} color={theme.textSecondary} />
-                      <Text style={[styles.detailText, { color: theme.textSecondary }]}>{cycle.chick_count?.toLocaleString() || 0} chicks</Text>
-                    </View>
-                  </View>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </View>
+          </View>
+        )}
+
+        {/* Debug: Show why graph might not be showing */}
+        {role !== 'grower' && (
+          <Card style={[styles.graphCard, { backgroundColor: theme.cardBackground }]}>
+            <CardContent style={styles.graphContent}>
+              <Text style={[styles.graphCaption, { color: theme.textSecondary }]}>Graph only shows for growers (you are: {role})</Text>
+            </CardContent>
+          </Card>
+        )}
+        {role === 'grower' && loading && (
+          <Card style={[styles.graphCard, { backgroundColor: theme.cardBackground }]}>
+            <CardContent style={styles.graphContent}>
+              <Text style={[styles.graphCaption, { color: theme.textSecondary }]}>Loading data...</Text>
+            </CardContent>
+          </Card>
+        )}
 
         {/* AI Insights Section - Only for Growers */}
         {role === 'grower' && (
@@ -529,15 +467,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingTop: 48,
+    paddingTop: 16,
     paddingBottom: 100,
   },
   panelHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    marginTop: 8,
+    marginHorizontal: 16,
+    marginTop: 48,
+    marginBottom: 0,
     paddingHorizontal: 8,
   },
   headerTextContainer: {

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import { Card, CardContent } from './ui/card';
-import { Thermometer, Droplets, Wind, Gauge, Eye, CloudRain, Sunrise, MapPin, Cloud } from 'lucide-react-native';
+import { Thermometer, Droplets, Wind, Gauge, Eye, CloudRain, Sunrise, MapPin, Cloud, Bell } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeProvider';
 import WeatherService, { WeatherData } from '../services/weatherService';
 import * as Location from 'expo-location';
+import { useNavigation } from '@react-navigation/native';
 
 const EnvironmentMonitoring = () => {
   const { theme } = useTheme();
+  const navigation = useNavigation();
   const [environmentData, setEnvironmentData] = useState({
     temperature: 24.5,
     humidity: 65,
@@ -140,15 +142,25 @@ const EnvironmentMonitoring = () => {
   
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Fixed Header */}
+      <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
+        <View style={styles.headerTextContainer}>
+          <Text style={[styles.title, { color: theme.white }]}>Environment Monitoring</Text>
+          <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Real-time flock conditions</Text>
+        </View>
+        <TouchableOpacity 
+          style={[styles.notificationButton, { backgroundColor: theme.white + '20' }]}
+          onPress={() => navigation.navigate('Notifications' as never)}
+          activeOpacity={0.7}
+        >
+          <Bell size={20} color={theme.white} />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
-        <View style={[styles.header, { backgroundColor: theme.primary, borderRadius: 16, padding: 12, marginBottom: 12 }]}>
-          <Text style={[styles.title, { color: theme.white }]}>Environment Monitoring</Text>
-          <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Real-time flock conditions</Text>
-        </View>
         
         {/* Unified Weather & Environment Card */}
         <View style={styles.section}>
@@ -320,8 +332,27 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingTop: 48,
+    paddingTop: 16,
     paddingBottom: 100,
+  },
+  panelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 48,
+    marginBottom: 0,
+    paddingHorizontal: 8,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     marginBottom: 12,

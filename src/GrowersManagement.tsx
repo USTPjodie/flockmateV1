@@ -92,17 +92,18 @@ const GrowersManagement = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Fixed Panel Header */}
+      <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
+        <View style={styles.headerTextContainer}>
+          <Text style={[styles.title, { color: theme.white }]}>Growers Management</Text>
+          <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage all growers across cycles</Text>
+        </View>
+      </View>
+
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Panel Header */}
-        <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 12, padding: 16 }]}>
-          <View style={styles.headerTextContainer}>
-            <Text style={[styles.title, { color: theme.white }]}>Growers Management</Text>
-            <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage all growers across cycles</Text>
-          </View>
-        </View>
 
         {/* Management Options */}
         <View style={styles.section}>
@@ -285,14 +286,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingTop: 16,
+    paddingBottom: 100,
   },
   panelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 16,
+    marginHorizontal: 16,
+    marginTop: 48,
+    marginBottom: 0,
     paddingHorizontal: 8,
   },
   headerTextContainer: {

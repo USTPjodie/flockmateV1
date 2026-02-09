@@ -9,7 +9,7 @@ import {
   Dimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, Package, User, Users, Thermometer } from 'lucide-react-native';
+import { Home, Package, User, Users, Thermometer, CalendarDays, Activity } from 'lucide-react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme } from './contexts/ThemeProvider';
 
@@ -52,7 +52,9 @@ const CustomBottomNav = ({
       case 'Cycles':
         return Package;
       case 'Monitoring':
-        return Thermometer;
+        return Activity;
+      case 'Calendar':
+        return CalendarDays;
       case 'Account':
         return User;
       case 'Growers':
@@ -71,6 +73,8 @@ const CustomBottomNav = ({
         return 'Cycles';
       case 'Monitoring':
         return 'Monitoring';
+      case 'Calendar':
+        return 'Calendar';
       case 'Account':
         return 'Account';
       case 'Growers':

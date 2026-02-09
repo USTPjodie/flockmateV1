@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from './contexts/AuthContext';
 import { Card, CardContent } from './components/ui/card';
-import { User, Mail, LogOut, Key } from 'lucide-react-native';
+import { User, Mail, LogOut, Key, Bell } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from './contexts/ThemeProvider';
@@ -41,13 +41,22 @@ const Account = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Panel Header */}
+      {/* Fixed Panel Header */}
       <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
         <View style={styles.headerTextContainer}>
           <Text style={[styles.title, { color: theme.white }]}>Account</Text>
           <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage your profile and settings</Text>
         </View>
+        <TouchableOpacity 
+          style={[styles.notificationButton, { backgroundColor: theme.white + '20' }]}
+          onPress={() => navigation.navigate('Notifications' as never)}
+          activeOpacity={0.7}
+        >
+          <Bell size={20} color={theme.white} />
+        </TouchableOpacity>
       </View>
+
+      <View style={styles.content}>
 
       {/* User Profile Card */}
       <Card style={[styles.profileCard, { backgroundColor: theme.cardBackground }]}>
@@ -98,6 +107,7 @@ const Account = () => {
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
+      </View>
     </View>
   );
 };
@@ -105,20 +115,31 @@ const Account = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  content: {
+    flex: 1,
     padding: 16,
-    paddingTop: 48,
+    paddingTop: 16,
     paddingBottom: 100,
   },
   panelHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    marginTop: 8,
+    marginHorizontal: 16,
+    marginTop: 48,
+    marginBottom: 0,
     paddingHorizontal: 8,
   },
   headerTextContainer: {
     flex: 1,
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: 20,

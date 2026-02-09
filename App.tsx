@@ -29,8 +29,9 @@ import NotificationsPage from './src/components/NotificationsPage';
 import ChangePassword from './src/components/ChangePassword';
 import SplashScreen from './src/components/SplashScreen';
 import TestGrowers from './src/testGrowers';
-import { Home as HomeIcon, Package, User, Users } from 'lucide-react-native';
+import { Home as HomeIcon, Package, User, Users, CalendarDays, Activity } from 'lucide-react-native';
 import EnvironmentMonitoring from './src/components/EnvironmentMonitoring';
+import CalendarView from './src/components/CalendarView';
 import { Thermometer, Trophy } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -308,6 +309,16 @@ function TechnicianTabs() {
         }}
       />
       <Tab.Screen 
+        name="Calendar" 
+        component={CalendarView}
+        options={{
+          tabBarLabel: 'Calendar',
+          tabBarIcon: ({ color, size }) => (
+            <CalendarDays color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
         name="Account" 
         component={TechnicianAccountStack}
         options={{
@@ -357,7 +368,17 @@ function GrowerTabs() {
         options={{
           tabBarLabel: 'Monitoring',
           tabBarIcon: ({ color, size }) => (
-            <Thermometer color={color} size={size} />
+            <Activity color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Calendar" 
+        component={CalendarView}
+        options={{
+          tabBarLabel: 'Calendar',
+          tabBarIcon: ({ color, size }) => (
+            <CalendarDays color={color} size={size} />
           ),
         }}
       />

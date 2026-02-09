@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Card, CardContent } from './components/ui/card';
-import { Calendar, Users, Package, ChevronRight, Plus } from 'lucide-react-native';
+import { Calendar, Users, Package, ChevronRight, Plus, Bell } from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useAuth } from './contexts/AuthContext';
@@ -75,17 +75,25 @@ const Cycles = ({ route }: any) => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Fixed Panel Header */}
+      <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
+        <View style={styles.headerTextContainer}>
+          <Text style={[styles.title, { color: theme.white }]}>Poultry Cycles</Text>
+          <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage production cycles</Text>
+        </View>
+        <TouchableOpacity 
+          style={[styles.notificationButton, { backgroundColor: theme.white + '20' }]}
+          onPress={() => navigation.navigate('Notifications' as never)}
+          activeOpacity={0.7}
+        >
+          <Bell size={20} color={theme.white} />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Panel Header */}
-        <View style={[styles.panelHeader, { backgroundColor: theme.primary, borderRadius: 16, padding: 12 }]}>
-          <View style={styles.headerTextContainer}>
-            <Text style={[styles.title, { color: theme.white }]}>Poultry Cycles</Text>
-            <Text style={[styles.subtitle, { color: theme.white + 'CC' }]}>Manage production cycles</Text>
-          </View>
-        </View>
 
         {/* Cycles List Header with Add Button */}
         <View style={styles.sectionHeader}>
@@ -174,15 +182,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingTop: 48,
+    paddingTop: 16,
     paddingBottom: 100,
   },
   panelHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    marginTop: 8,
+    marginHorizontal: 16,
+    marginTop: 48,
+    marginBottom: 0,
     paddingHorizontal: 8,
   },
   headerTextContainer: {
@@ -195,6 +204,13 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',
