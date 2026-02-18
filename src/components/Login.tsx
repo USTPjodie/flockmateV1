@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Image } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
-import { Bird, Loader2, User, Wrench, Sprout, Eye, EyeOff } from "lucide-react-native";
+import { Loader2, User, Wrench, Sprout, Eye, EyeOff } from "lucide-react-native";
 import { useToast } from "../hooks/use-toast";
 import { useTheme } from "../contexts/ThemeProvider";
 
@@ -95,8 +95,12 @@ export default function Login() {
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: theme.primary + '20' }]}>
-            <Bird size={32} color={theme.primary} />
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
           <Text style={[styles.title, { color: theme.text }]}>Flockmate</Text>
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Poultry Monitoring System</Text>
@@ -321,13 +325,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  logoContainer: {
+    width: 100,
+    height: 100,
+    marginBottom: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+  },
+  logo: {
+    width: 100,
+    height: 100,
   },
   title: {
     fontSize: 32,
